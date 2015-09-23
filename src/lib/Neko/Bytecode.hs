@@ -1,4 +1,4 @@
-module Neko where
+module Neko.Bytecode where
 
 import Data.ByteString.Lazy as BS
 import Data.ByteString.Lazy.Char8 as BSChar

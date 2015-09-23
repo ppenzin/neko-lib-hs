@@ -1,6 +1,6 @@
 import Test.Tasty
 import Test.Tasty.SmallCheck as SC
-import Neko
+import Neko.Bytecode
 import Data.ByteString.Lazy
 
 main = defaultMain tests

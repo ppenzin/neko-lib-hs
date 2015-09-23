@@ -16,7 +16,7 @@ data-files:
 
 Library
   hs-source-dirs:      src/lib
-  exposed-modules:     Neko, Neko.IO
+  exposed-modules:     Neko.Bytecode, Neko.IO
   build-depends:       base, bytestring, binary
 
 Test-suite test-lib
