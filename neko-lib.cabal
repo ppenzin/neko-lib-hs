@@ -1,0 +1,26 @@
+name:                neko-lib
+
+version:             0.0.0.1
+
+synopsis:            Neko VM code generation and disassembly library
+description:         A library to produce and read Neko bytecode
+homepage:            http://github.com/ppenzin/neko-lib-hs/
+license:             BSD3
+license-file:        LICENSE
+author:              Petr Penzin
+maintainer:          penzin-dev@gmail.com
+category:            Build
+build-type:          Simple
+cabal-version:       >=1.8
+data-files:          
+
+Library
+  hs-source-dirs:      src/lib
+  exposed-modules:     Neko, Neko.IO
+  build-depends:       base, bytestring, binary
+
+Test-suite test-lib
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      src/test, src/lib
+  main-is:             TestAll.hs
+  build-depends:       base, bytestring, binary, tasty==0.10.1.2, tasty-smallcheck==0.8.0.1
