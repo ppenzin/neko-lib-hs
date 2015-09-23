@@ -1,3 +1,15 @@
+{-|
+Module      : Neko.Bytecode
+Description : Emit and parse Neko bytecode
+Copyright   : (c) Petr Penzin, 2015
+License     : BSD3
+Maintainer  : penzin.dev@gmail.com
+Stability   : experimental
+Portability : cross-platform
+
+Primitives to emit and parse Neko bytecode, include opcode definitions.
+
+-}
 module Neko.Bytecode where
 
 import Data.ByteString.Lazy as BS

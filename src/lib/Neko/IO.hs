@@ -1,3 +1,16 @@
+{-|
+Module      : Neko.IO
+Description : Neko-styled IO operations
+Copyright   : (c) Petr Penzin, 2015
+License     : BSD3
+Maintainer  : penzin.dev@gmail.com
+Stability   : experimental
+Portability : cross-platform
+
+Define functions to parse Haskell types from binary and represent them in
+binary (using bytestrings).
+
+-}
 module Neko.IO where
 
 import Data.ByteString.Lazy as BS
