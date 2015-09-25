@@ -21,7 +21,7 @@ import Neko.IO
 
 -- | Global value type
 data Global =
-        GlobalVar String -- ^ Variable
+        GlobalVar String -- ^ Global variable (name)
       | GlobalFunction (Int, Int) -- ^ Function
       | GlobalString String -- ^ String literal
       | GlobalFloat String -- ^ Floating point constant
@@ -48,11 +48,11 @@ readGlobals n bs = if (isNothing current) then Nothing else res
 -- | Read a single global value, if succesfull return a single global value and remaining bytestring
 readGlobal :: ByteString -- ^ Bytes to read from
            -> Maybe (Global, ByteString) -- ^ Read value and the rest of bytes (if successfull)
-readGlobal bs = if (isPrefixOf (BS.singleton 1) bs) then error "TODO readGlobal: implement GlobalVar" else
+readGlobal bs = if (isPrefixOf (BS.singleton 1) bs) then (readGlobalVar rest) else
                 if (isPrefixOf (BS.singleton 2) bs) then error "TODO readGlobal: implement GlobalFunction" else
                 if (isPrefixOf (BS.singleton 3) bs) then (readGlobalString rest) else
                 if (isPrefixOf (BS.singleton 4) bs) then error "TODO readGlobal: implement GlobalFloat" else
-                if (isPrefixOf (BS.singleton 5) bs) then error "TODO readGlobal: implement GlobalDebug" else
+                if (isPrefixOf (BS.singleton 5) bs) then (readDebugInfo rest) else
                 if (isPrefixOf (BS.singleton 6) bs) then error "TODO readGlobal: implement GlobalVersion" else
                 Nothing
     where rest = BS.drop 1 bs
@@ -69,3 +69,14 @@ readGlobalString bs = if (isNothing maybeLength) then Nothing else
           subByteString = BS.take length rest
           ret = BS.drop length rest
 
+-- | Read debug information literal form a bytestring
+readDebugInfo :: ByteString -- ^ Bytes to read from
+                 -> Maybe (Global, ByteString) -- ^ Value read and remaining bytes (if succesfull)
+readDebugInfo bs = error "TODO readGlobal: implement GlobalDebug"
+
+-- | Read a global variable
+readGlobalVar :: ByteString -- ^ Bytes to read from
+                 -> Maybe (Global, ByteString) -- ^ Value read and remaining bytes (if succesfull)
+readGlobalVar bs = Just (GlobalVar name, BS.drop 1 rest)
+    where name = BSChar.unpack (str)
+          (str, rest) = BS.span (\x -> (x /= 0x00)) bs
