@@ -97,7 +97,7 @@ data Instruction =
       deriving (Show, Eq)
 
 -- | A Neko module. Consists of global entities and a list of instructions
-data Module = N {globals::[Global], code::[Instruction]} deriving (Show, Eq)
+data Module = N {globals::[Global], fields::[String], code::[Instruction]} deriving (Show, Eq)
 
 -- | Parse module from ByteString.
 --   Return module or return an error string
@@ -109,8 +109,18 @@ readModule bs = if (isNothing afterMagic) then (Left "Failed to read magic value
 -- | Parse module from ByteString after magic value is stripped
 --   Return module or return an error string
 readModuleData :: ByteString -> Either String Module
-readModuleData bs = if (isNothing moduleFields) then (Left err) else Right N {globals=[], code=[]}
-    where (rest, err, moduleFields) = readModuleFields bs
+readModuleData bs = if (isNothing moduleFields) then (Left err) else
+                    if (isNothing resGlobals) then (Left "Failed to read globals") else
+                    if (isNothing resCode) then (Left errInstructions) else
+                    if (BS.null rest) then Right N {globals=gl, fields=fields, code=instrs} else
+                    Left "Trailing bytes"
+    where (afterModuleFields, err, moduleFields) = readModuleFields bs
+          (nglobals, nids, csize) = fromJust moduleFields
+          resGlobals = readGlobals nglobals afterModuleFields
+          (gl, afterGlobals) = fromJust resGlobals
+          (fields, afterFields) = readFields nids afterGlobals
+          (rest, errInstructions, resCode) = readInstructions csize afterFields
+          instrs = fromJust resCode
 
 -- | Read module fields to determine code size, number of globals, and number of fields
 readModuleFields :: ByteString -- ^ ByteString to read from
@@ -148,3 +158,28 @@ checkModuleFields globals fields code
 stripMagic :: ByteString -> Maybe ByteString
 stripMagic bs = if (isPrefixOf (BSChar.pack "NEKO") bs) then (Just $ BS.drop 4 bs) else Nothing
 
+-- | Read global fields form a bytestring
+--   TODO check for unterminated string
+readFields :: Int32 -> ByteString -> ([String], ByteString)
+readFields 0 bs = ([], bs)
+readFields n bs = ((str:strs), rest)
+    where (str, bsNext) = readNullTerminatedString bs
+          (strs, rest) = readFields (n - 1) bsNext
+
+-- | Read instructions
+readInstructions :: Int32 -- ^ code size
+                 -> ByteString -- ^ bytes to read from
+                 -> (ByteString, String, Maybe [Instruction]) -- ^ unconsumed input, status message and list of instructions
+readInstructions 0 bs = (bs, "Success", Just [])
+readInstructions n bs = if (isNothing current) then (bs, "Failed to read instruction", Nothing)  else
+                        if (isNothing resRest) then (bs, err, Nothing)  else (rest, "Success", Just (i:is))
+    where (current, remByteStr) = readInstruction bs
+          (rest, err, resRest) = readInstructions (n - 1) remByteStr
+          i = fromJust current
+          is = fromJust resRest
+        
+
+-- | Read a single bytecode instruction
+readInstruction :: ByteString -- ^ Input
+                -> (Maybe Instruction, ByteString) -- ^ Result or nothing, unconsumed input
+readInstruction = error "TODO implement readInstruction"

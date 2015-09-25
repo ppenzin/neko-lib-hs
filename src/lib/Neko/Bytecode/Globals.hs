@@ -30,7 +30,7 @@ data Global =
       deriving (Show, Eq)
 
 -- | Read globals from a bytestring
-readGlobals :: Integer -- ^ Number of global values to read
+readGlobals :: Int32 -- ^ Number of global values to read
             -> ByteString -- ^ Bytestring to read from
             -> Maybe ([Global], ByteString) -- ^ On success: list of global values read and unconsumed bytestring
 readGlobals 0 bs = Just ([], bs)
@@ -77,6 +77,5 @@ readDebugInfo bs = error "TODO readGlobal: implement GlobalDebug"
 -- | Read a global variable
 readGlobalVar :: ByteString -- ^ Bytes to read from
                  -> Maybe (Global, ByteString) -- ^ Value read and remaining bytes (if succesfull)
-readGlobalVar bs = Just (GlobalVar name, BS.drop 1 rest)
-    where name = BSChar.unpack (str)
-          (str, rest) = BS.span (\x -> (x /= 0x00)) bs
+readGlobalVar bs = Just (GlobalVar name, rest)
+    where (name, rest) = readNullTerminatedString bs

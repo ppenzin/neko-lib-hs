@@ -12,7 +12,7 @@ tests = testGroup "Tests" [dasmTests, globalsReadTests]
 
 dasmTests = testGroup "Disassemble tests"
   [ SC.testProperty "Disassemble hello world" $
-      (readModule hello) == Right (N {globals=[GlobalString "Hello world!\n", GlobalVar "var"], code=[AccGlobal 0, Push, AccBuiltin "print", Call 1]})
+      (readModule hello) == Right (N {globals=[GlobalString "Hello world!\n", GlobalVar "var"], fields=["print"], code=[AccGlobal 0, Push, AccBuiltin "print", Call 1]})
   , SC.testProperty "Disassemble empty bytestring" $
       (readModule $ pack []) == Left "Failed to read magic value"
   , SC.testProperty "Invalid magic value" $

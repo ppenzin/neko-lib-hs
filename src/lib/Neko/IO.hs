@@ -13,6 +13,7 @@ A set of functions to parse Haskell types from and represent in Neko binary.
 module Neko.IO where
 
 import Data.ByteString.Lazy as BS
+import Data.ByteString.Lazy.Char8 as BSChar
 import Data.Maybe
 import Data.Bits
 import Data.Word
@@ -53,3 +54,9 @@ readUInt16 bs = if (isNothing r) then Nothing else Just (fromIntegral num, rest)
     where r = readVarUInt 2 bs
           (num, rest) = fromJust r
 
+-- | Read a null-terminated string from a bytestring
+--   Return string and unconsumed bytes; drop null character.
+readNullTerminatedString :: ByteString -> (String, ByteString)
+readNullTerminatedString bs = (str, BS.drop 1 rest)
+    where str = BSChar.unpack (chars)
+          (chars, rest) = BS.span (\x -> (x /= 0x00)) bs
