@@ -18,6 +18,7 @@ import Data.Maybe
 import Data.Either
 import Data.Word
 import Data.Int
+import Data.Bits
 
 import Neko.IO
 import Neko.Bytecode.Globals
@@ -182,4 +183,18 @@ readInstructions n bs = if (isNothing current) then (bs, "Failed to read instruc
 -- | Read a single bytecode instruction
 readInstruction :: ByteString -- ^ Input
                 -> (Maybe Instruction, ByteString) -- ^ Result or nothing, unconsumed input
-readInstruction = error "TODO implement readInstruction"
+readInstruction bs = (instr, rest)
+    where firstByte = BS.head bs
+          firstTail = BS.tail bs
+          code = firstByte .&. 3
+          opNum = if (code == 0) then (firstByte `shiftR` 2) else
+                  if (code == 1) then (firstByte `shiftR` 3) else
+                  if (code == 2) then if (firstByte == 2) then (BS.head firstTail) else (firstByte `shiftR` 2) else
+                  if (code == 3) then (firstByte `shiftR` 2) else error "Unrecognized operation"
+          opcodeTail = if (firstByte == 2) then BS.tail firstTail else firstTail
+          instr = if (opNum == 6) then Just (AccGlobal $ fromIntegral ((firstByte `shiftR` 2) .&. 1)) else
+                  if (opNum == 19) then Just (Push) else
+                  --if (opNum == 11) then Just (AccBuiltin ) else
+                  --if (opNum == 21) then Just (Call ) else
+                  Nothing
+          rest = if (isNothing instr) then bs else opcodeTail
