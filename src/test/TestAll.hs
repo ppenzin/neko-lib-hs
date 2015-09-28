@@ -4,11 +4,12 @@ import Data.ByteString.Lazy
 
 import Neko.Bytecode
 import Neko.Bytecode.Globals
+import Neko.Bytecode.Instructions
 
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Tests" [dasmTests, globalsReadTests]
+tests = testGroup "Tests" [dasmTests, globalsReadTests, instrReadTests]
 
 dasmTests = testGroup "Disassemble tests"
   [ SC.testProperty "Disassemble hello world" $
@@ -44,6 +45,11 @@ globalsReadTests = testGroup "Globals READ tests"
   , SC.testProperty "Read global variable" $
       (readGlobals 1 $ pack [0x01, 0x48, 0x65, 0x00])
                                                                   == Just ([GlobalVar "He"], empty)
+  ]
+
+instrReadTests = testGroup "Instructions READ tests"
+  [ SC.testProperty "AccGlobal 0" $ (readInstruction $ pack [0x31]) == ((Just (AccGlobal 0)), empty)
+  , SC.testProperty "Push" $ (readInstruction $ pack [0x4c]) == (Just (Push), empty)
   ]
 
 hello = pack [
