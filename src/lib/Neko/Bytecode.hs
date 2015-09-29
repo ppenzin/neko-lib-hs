@@ -20,7 +20,6 @@ import Data.Either
 import Data.Word
 import Data.Int
 
-import Neko.IO
 import Neko.Bytecode.Globals
 import Neko.Bytecode.Instructions
 

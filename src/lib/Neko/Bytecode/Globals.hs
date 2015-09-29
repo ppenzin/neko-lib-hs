@@ -20,8 +20,6 @@ import Data.Maybe
 import Data.Word
 import Data.Int
 
-import Neko.IO
-
 -- | Global value type
 data Global =
         GlobalVar String -- ^ Global variable (name)
