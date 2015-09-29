@@ -2,7 +2,7 @@
 Module      : Neko.IO
 Description : Neko-styled IO operations
 Copyright   : (c) Petr Penzin, 2015
-License     : BSD3
+License     : BSD2
 Maintainer  : penzin.dev@gmail.com
 Stability   : experimental
 Portability : cross-platform

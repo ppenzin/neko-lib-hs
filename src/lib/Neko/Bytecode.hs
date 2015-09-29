@@ -2,7 +2,7 @@
 Module      : Neko.Bytecode
 Description : Emit and parse Neko bytecode
 Copyright   : (c) Petr Penzin, 2015
-License     : BSD3
+License     : BSD2
 Maintainer  : penzin.dev@gmail.com
 Stability   : experimental
 Portability : cross-platform

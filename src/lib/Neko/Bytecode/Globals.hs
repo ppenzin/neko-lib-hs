@@ -2,7 +2,7 @@
 Module      : Neko.Bytecode.Globals
 Description : Global values for a Neko module
 Copyright   : (c) Petr Penzin, 2015
-License     : BSD3
+License     : BSD2
 Maintainer  : penzin.dev@gmail.com
 Stability   : experimental
 Portability : cross-platform

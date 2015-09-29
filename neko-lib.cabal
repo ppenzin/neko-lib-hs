@@ -5,7 +5,7 @@ version:             0.0.0.1
 synopsis:            Neko VM code generation and disassembly library
 description:         A library to produce and read Neko bytecode
 homepage:            http://github.com/ppenzin/neko-lib-hs/
-license:             BSD3
+license:             BSD2
 license-file:        LICENSE
 author:              Petr Penzin
 maintainer:          penzin-dev@gmail.com
