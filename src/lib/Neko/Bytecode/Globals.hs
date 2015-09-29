@@ -14,7 +14,9 @@ module Neko.Bytecode.Globals where
 
 import Data.ByteString.Lazy as BS
 import Data.ByteString.Lazy.Char8 as BSChar
+import Data.Binary.Get
 import Data.Maybe
+import Data.Word
 import Data.Int
 
 import Neko.IO
@@ -40,10 +42,6 @@ readGlobals n bs = if (isNothing current) then Nothing else res
           next = readGlobals (n - 1) rest
           res = if (isNothing next) then Nothing else Just ((val:vals), theTail)
           (vals, theTail) = fromJust next
-
--- Read fields
-
--- Read instructions
 
 -- | Read a single global value, if succesfull return a single global value and remaining bytestring
 readGlobal :: ByteString -- ^ Bytes to read from
@@ -79,3 +77,30 @@ readGlobalVar :: ByteString -- ^ Bytes to read from
                  -> Maybe (Global, ByteString) -- ^ Value read and remaining bytes (if succesfull)
 readGlobalVar bs = Just (GlobalVar name, rest)
     where (name, rest) = readNullTerminatedString bs
+
+-- | Get a list of globals from a bytestring
+getGlobals :: Word32 -- ^ number of globals
+           -> Get [Global] -- ^ decode a list
+getGlobals 0 = return []
+getGlobals n = getGlobal >>= \g -> getGlobals (n - 1) >>= \gs -> return (g:gs)
+
+-- | Read a global from a bytestring
+getGlobal :: Get Global
+getGlobal = getWord8
+        >>= \b -> if (b == 1) then getGlobalVar else
+                  if (b == 2) then error "TODO getGlobal: implement GlobalFunction" else
+                  if (b == 3) then getGlobalString else
+                  if (b == 4) then error "TODO getGlobal: implement GlobalFloat" else
+                  if (b == 5) then error "TODO getGlobal: implement GlobalDebug" else
+                  if (b == 6) then error "TODO getGlobal: implement GlobalVersion" else
+                  fail "getGlobal: urecognized global"
+
+-- | Decode a global variable
+getGlobalVar :: Get Global
+getGlobalVar = getLazyByteStringNul >>= \b -> return ( GlobalVar $ BSChar.unpack b)
+
+-- | Decode a global string
+getGlobalString :: Get Global
+getGlobalString = getWord16le
+              >>= \length -> getLazyByteString (fromIntegral length)
+              >>= \s -> return (GlobalString $ BSChar.unpack s)

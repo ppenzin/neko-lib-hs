@@ -14,7 +14,9 @@ module Neko.Bytecode.Instructions where
 
 import Data.Int
 import Data.Bits
+import Data.Word
 import Data.Maybe
+import Data.Binary.Get
 import Data.ByteString.Lazy as BS
 
 -- | Various NekoVM instructions
@@ -122,3 +124,24 @@ readInstruction bs = (instr, rest)
                   --if (opNum == 21) then Just (Call ) else
                   Nothing
           rest = if (isNothing instr) then bs else opcodeTail
+
+-- | Grab instructions from a bytestring
+getInstructions :: Word32 -- ^ number of instruction
+                -> Get [Instruction] -- ^ decoder
+getInstructions 0 = return []
+getInstructions n = getInstruction
+                >>= \i -> getInstructions (n - 1) 
+                >>= \is -> return (i:is)
+
+-- | Grab a single instruction from a bytestring
+getInstruction :: Get Instruction
+getInstruction = getWord8
+             >>= \b -> return (b .&. 3)
+             >>= \code -> if (code == 0) then getOp (b `shiftR` 2) else
+                          if (code == 1) then getOp (b `shiftR` 3) else
+                          if (code == 2) then if (b == 2) then (getWord8 >>= getOp) else getOp (b `shiftR` 3) else
+                          if (code == 3) then getOp (b `shiftR` 2) else
+                          fail "getInstruction: unrecognized opcode group"
+   where getOp opnum = if (opnum == 6) then (getWord8 >>= \g->return (AccGlobal $ fromIntegral g)) else
+                       if (opnum == 19) then return (Push) else
+                       fail "getInstruction: unrecognized opcode"

@@ -14,6 +14,7 @@ module Neko.Bytecode where
 
 import Data.ByteString.Lazy as BS
 import Data.ByteString.Lazy.Char8 as BSChar
+import Data.Binary.Get
 import Data.Maybe
 import Data.Either
 import Data.Word
@@ -29,9 +30,17 @@ data Module = N {globals::[Global], fields::[String], code::[Instruction]} deriv
 -- | Parse module from ByteString.
 --   Return module or return an error string
 readModule :: ByteString -> Either String Module
+readModule bs = if (isRight res) then
+                    if (BS.null rest) then (Right m) else Left "Trailing bytes"
+                else Left err
+    where res = runGetOrFail getModule bs
+          Right (rest, _, m) = res
+          Left (_, _, err) = res
+{-
 readModule bs = if (isNothing afterMagic) then (Left "Failed to read magic value")
                 else readModuleData $ fromJust afterMagic
     where afterMagic = stripMagic bs
+-}
 
 -- | Parse module from ByteString after magic value is stripped
 --   Return module or return an error string
@@ -69,6 +78,36 @@ readModuleFields bs = if (isNothing resNumGlobals) then (bs, errNumGlobals, Noth
                       errCodeSize = "Failed to read code size"
                       checkError = checkModuleFields numGlobals numFields codeSize
 
+-- | Internal type for module header (counts of entities in the module)
+data ModuleHeader = ModuleHeader {
+    numGlobals :: Word32, -- ^ Number of globals
+    numFields  :: Word32, -- ^ Number of fields
+    codeSize   :: Word32  -- ^ Code size (number of instructions
+}
+
+-- | Pick module header fields from a bytestring. Requires bytestring to start with the first field.
+getModuleHeader :: Get ModuleHeader
+getModuleHeader = ModuleHeader <$> getWord32le <*> getWord32le <*> getWord32le
+
+-- | Get a full module from a bytestring
+getModule :: Get Module
+getModule = getMagicCheck
+        >>= \good -> if (not good) then fail "Invalid magic value" else getModuleHeader
+        >>= \h -> getModuleContents (numGlobals h) (numFields h) (codeSize h)
+
+-- | Parse insides of a module from a bytestring.
+--   Bytesting is expected to start with the first section of the module.
+getModuleContents :: Word32 -- ^ number of globals
+                  -> Word32 -- ^ number of fields
+                  -> Word32 -- ^ code size
+                  -> Get Module -- ^ decode module
+getModuleContents globals fields code
+     = if (globals > 0xFFFF) then fail "Number of globals not between 0 and 0xFFFF" else
+       if (fields > 0xFFFF) then fail "Number of fields not between 0 and 0xFFFF" else
+       if (code > 0xFFFFFF) then fail "Code size not between 0 and 0xFFFFFF" else
+       N <$> (getGlobals globals) <*> (getFields fields) <*> (getInstructions code)
+     
+
 -- | Check module fields,
 --   return an error string if any of values is out of range, otherwise return Nothing.
 checkModuleFields :: Int32 -- ^ Suggested number of globals
@@ -85,11 +124,21 @@ checkModuleFields globals fields code
 stripMagic :: ByteString -> Maybe ByteString
 stripMagic bs = if (isPrefixOf (BSChar.pack "NEKO") bs) then (Just $ BS.drop 4 bs) else Nothing
 
--- | Read global fields form a bytestring
---   TODO check for unterminated string
-readFields :: Int32 -> ByteString -> ([String], ByteString)
-readFields 0 bs = ([], bs)
-readFields n bs = ((str:strs), rest)
-    where (str, bsNext) = readNullTerminatedString bs
-          (strs, rest) = readFields (n - 1) bsNext
+-- | A check for next four bytes matching neko magic value
+getMagicCheck :: Get Bool
+getMagicCheck = getLazyByteString 4 >>= \b -> return (b == BSChar.pack "NEKO")
 
+-- | Read global fields form a bytestring
+readFields :: Int32 -> ByteString -> ([String], ByteString)
+readFields n bs = if (isLeft res) then error "Unhandled read error" else (strs, rest)
+    where res = runGetOrFail (getFields $ fromIntegral n) bs
+          Right (rest, _, strs) = res
+
+-- | Grab a global field from a bytestring
+getField :: Get String
+getField = getLazyByteStringNul >>= \b -> return (BSChar.unpack b)
+
+-- | Grab a list of fields (of known length) from a bytestring
+getFields :: Word32 -> Get [String]
+getFields 0 = return []
+getFields n = getField >>= \s -> getFields (n - 1) >>= \ss -> return (s:ss)

@@ -15,18 +15,18 @@ dasmTests = testGroup "Disassemble tests"
   [ SC.testProperty "Disassemble hello world" $
       (readModule hello) == Right (N {globals=[GlobalString "Hello world!\n", GlobalVar "var"], fields=["print"], code=[AccGlobal 0, Push, AccBuiltin "print", Call 1]})
   , SC.testProperty "Disassemble empty bytestring" $
-      (readModule $ pack []) == Left "Failed to read magic value"
+      (readModule $ pack []) == Left "not enough bytes"
   , SC.testProperty "Invalid magic value" $
-      (readModule $ pack [0x4f, 0x4b, 0x45, 0x4e, 0x02, 0x00, 0x00, 0x00]) == Left "Failed to read magic value"
+      (readModule $ pack [0x4f, 0x4b, 0x45, 0x4e, 0x02, 0x00, 0x00, 0x00]) == Left "Invalid magic value"
   , SC.testProperty "Too short to get globals" $
       (readModule $ pack [0x4e, 0x45, 0x4b, 0x4f, 0x02, 0x00])
-                                                                  == Left "Failed to read number of globals"
+                                                                  == Left "not enough bytes"
   , SC.testProperty "Too short to get fields" $
       (readModule $ pack [0x4e, 0x45, 0x4b, 0x4f, 0x02, 0x00, 0x00, 0x00,  0x01, 0x00])
-                                                                  == Left "Failed to read number of fields"
+                                                                  == Left "not enough bytes"
   , SC.testProperty "Too short to get code size" $
       (readModule $ pack [0x4e, 0x45, 0x4b, 0x4f, 0x02, 0x00, 0x00, 0x00,  0x01, 0x00, 0x00, 0x00, 0x07, 0x00])
-                                                                  == Left "Failed to read code size"
+                                                                  == Left "not enough bytes"
   , SC.testProperty "Invalid number of globals" $
       (readModule $ pack [0x4e, 0x45, 0x4b, 0x4f, 0xFF, 0xFF, 0xFF, 0xFF,  0x01, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00])
                                                                   == Left "Number of globals not between 0 and 0xFFFF"
