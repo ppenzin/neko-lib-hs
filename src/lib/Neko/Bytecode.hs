@@ -36,47 +36,6 @@ readModule bs = if (isRight res) then
     where res = runGetOrFail getModule bs
           Right (rest, _, m) = res
           Left (_, _, err) = res
-{-
-readModule bs = if (isNothing afterMagic) then (Left "Failed to read magic value")
-                else readModuleData $ fromJust afterMagic
-    where afterMagic = stripMagic bs
--}
-
--- | Parse module from ByteString after magic value is stripped
---   Return module or return an error string
-readModuleData :: ByteString -> Either String Module
-readModuleData bs = if (isNothing moduleFields) then (Left err) else
-                    if (isNothing resGlobals) then (Left "Failed to read globals") else
-                    if (isNothing resCode) then (Left errInstructions) else
-                    if (BS.null rest) then Right N {globals=gl, fields=fields, code=instrs} else
-                    Left "Trailing bytes"
-    where (afterModuleFields, err, moduleFields) = readModuleFields bs
-          (nglobals, nids, csize) = fromJust moduleFields
-          resGlobals = readGlobals nglobals afterModuleFields
-          (gl, afterGlobals) = fromJust resGlobals
-          (fields, afterFields) = readFields nids afterGlobals
-          (rest, errInstructions, resCode) = readInstructions csize afterFields
-          instrs = fromJust resCode
-
--- | Read module fields to determine code size, number of globals, and number of fields
-readModuleFields :: ByteString -- ^ ByteString to read from
-                 -> (ByteString, String, Maybe (Int32, Int32, Int32)) -- ^ Unconsumed bytestring, status message, and the triple: number of globals, number of fields and code size
-readModuleFields bs = if (isNothing resNumGlobals) then (bs, errNumGlobals, Nothing) else
-                      if (isNothing resNumFields) then (bs, errNumFields, Nothing) else
-                      if (isNothing resCodeSize) then (bs, errCodeSize, Nothing) else
-                      if (isJust checkError) then (bs, fromJust checkError, Nothing) else
-                      (bsAfter, "Success", Just (numGlobals, numFields, codeSize))
-                    where
-                      resNumGlobals = readInt32 bs
-                      (numGlobals, afterNumGlobals) = fromJust resNumGlobals
-                      resNumFields = readInt32 afterNumGlobals
-                      (numFields, afterNumFields) = fromJust resNumFields
-                      resCodeSize = readInt32 afterNumFields
-                      (codeSize, bsAfter) = fromJust resCodeSize
-                      errNumGlobals = "Failed to read number of globals"
-                      errNumFields = "Failed to read number of fields"
-                      errCodeSize = "Failed to read code size"
-                      checkError = checkModuleFields numGlobals numFields codeSize
 
 -- | Internal type for module header (counts of entities in the module)
 data ModuleHeader = ModuleHeader {
@@ -107,32 +66,9 @@ getModuleContents globals fields code
        if (code > 0xFFFFFF) then fail "Code size not between 0 and 0xFFFFFF" else
        N <$> (getGlobals globals) <*> (getFields fields) <*> (getInstructions code)
      
-
--- | Check module fields,
---   return an error string if any of values is out of range, otherwise return Nothing.
-checkModuleFields :: Int32 -- ^ Suggested number of globals
-                  -> Int32 -- ^ Suggested number of fields
-                  -> Int32 -- ^ Suggested code size (number of instructions)
-                  -> Maybe String -- ^ Error message for out of range value, Nothing on success
-checkModuleFields globals fields code
-     = if (globals < 0 || globals > 0xFFFF) then Just "Number of globals not between 0 and 0xFFFF" else
-       if (fields < 0 || fields > 0xFFFF) then Just "Number of fields not between 0 and 0xFFFF" else
-       if (code < 0 || code > 0xFFFFFF) then Just "Code size not between 0 and 0xFFFFFF" else
-       Nothing
-
--- | Check first four bytes for magic value. Return the rest of the string if OK, otherwise return Nothing
-stripMagic :: ByteString -> Maybe ByteString
-stripMagic bs = if (isPrefixOf (BSChar.pack "NEKO") bs) then (Just $ BS.drop 4 bs) else Nothing
-
 -- | A check for next four bytes matching neko magic value
 getMagicCheck :: Get Bool
 getMagicCheck = getLazyByteString 4 >>= \b -> return (b == BSChar.pack "NEKO")
-
--- | Read global fields form a bytestring
-readFields :: Int32 -> ByteString -> ([String], ByteString)
-readFields n bs = if (isLeft res) then error "Unhandled read error" else (strs, rest)
-    where res = runGetOrFail (getFields $ fromIntegral n) bs
-          Right (rest, _, strs) = res
 
 -- | Grab a global field from a bytestring
 getField :: Get String

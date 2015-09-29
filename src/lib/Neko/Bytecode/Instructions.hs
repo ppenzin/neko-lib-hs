@@ -16,6 +16,7 @@ import Data.Int
 import Data.Bits
 import Data.Word
 import Data.Maybe
+import Data.Either
 import Data.Binary.Get
 import Data.ByteString.Lazy as BS
 
@@ -94,36 +95,21 @@ data Instruction =
       deriving (Show, Eq)
 
 -- | Read instructions
-readInstructions :: Int32 -- ^ code size
+readInstructions :: Word32 -- ^ code size
                  -> ByteString -- ^ bytes to read from
                  -> (ByteString, String, Maybe [Instruction]) -- ^ unconsumed input, status message and list of instructions
-readInstructions 0 bs = (bs, "Success", Just [])
-readInstructions n bs = if (isNothing current) then (bs, "Failed to read instruction", Nothing)  else
-                        if (isNothing resRest) then (bs, err, Nothing)  else (rest, "Success", Just (i:is))
-    where (current, remByteStr) = readInstruction bs
-          (rest, err, resRest) = readInstructions (n - 1) remByteStr
-          i = fromJust current
-          is = fromJust resRest
-        
+readInstructions n bs = if (isRight res) then (rest, "Success", Just (is)) else (rest', err, Nothing)
+    where res = runGetOrFail (getInstructions n) bs
+          Right (rest, _, is) = res
+          Left (rest', _, err) = res
 
 -- | Read a single bytecode instruction
 readInstruction :: ByteString -- ^ Input
                 -> (Maybe Instruction, ByteString) -- ^ Result or nothing, unconsumed input
-readInstruction bs = (instr, rest)
-    where firstByte = BS.head bs
-          firstTail = BS.tail bs
-          code = firstByte .&. 3
-          opNum = if (code == 0) then (firstByte `shiftR` 2) else
-                  if (code == 1) then (firstByte `shiftR` 3) else
-                  if (code == 2) then if (firstByte == 2) then (BS.head firstTail) else (firstByte `shiftR` 2) else
-                  if (code == 3) then (firstByte `shiftR` 2) else error "Unrecognized operation"
-          opcodeTail = if (firstByte == 2) then BS.tail firstTail else firstTail
-          instr = if (opNum == 6) then Just (AccGlobal $ fromIntegral ((firstByte `shiftR` 2) .&. 1)) else
-                  if (opNum == 19) then Just (Push) else
-                  --if (opNum == 11) then Just (AccBuiltin ) else
-                  --if (opNum == 21) then Just (Call ) else
-                  Nothing
-          rest = if (isNothing instr) then bs else opcodeTail
+readInstruction bs = if (isRight res) then (Just (i), rest) else (Nothing, rest')
+    where res = runGetOrFail getInstruction bs
+          Right (rest, _, i) = res
+          Left (rest', _, _) = res
 
 -- | Grab instructions from a bytestring
 getInstructions :: Word32 -- ^ number of instruction
@@ -137,11 +123,19 @@ getInstructions n = getInstruction
 getInstruction :: Get Instruction
 getInstruction = getWord8
              >>= \b -> return (b .&. 3)
-             >>= \code -> if (code == 0) then getOp (b `shiftR` 2) else
-                          if (code == 1) then getOp (b `shiftR` 3) else
-                          if (code == 2) then if (b == 2) then (getWord8 >>= getOp) else getOp (b `shiftR` 3) else
-                          if (code == 3) then getOp (b `shiftR` 2) else
-                          fail "getInstruction: unrecognized opcode group"
-   where getOp opnum = if (opnum == 6) then (getWord8 >>= \g->return (AccGlobal $ fromIntegral g)) else
-                       if (opnum == 19) then return (Push) else
-                       fail "getInstruction: unrecognized opcode"
+             >>= \code ->      if (code == 0) then getOp (b `shiftR` 2) Nothing
+                          else if (code == 1) then getOp (b `shiftR` 3) (Just $ fromIntegral $ b `shiftR` 2 .&. 1)
+                          else if (code == 2) then
+                                   getWord8 >>= \w -> if (b == 2) then (getOp (fromIntegral w) Nothing)
+                                                      else (getOp (b `shiftR` 2) (Just (fromIntegral w)))
+                          else if (code == 3) then
+                                   getWord32le >>= \i -> getOp (b `shiftR` 2) (Just i)
+                          else fail "getInstruction: unrecognized opcode group"
+
+-- | Second level of instruction read logic
+getOp :: Word8 -- ^ Operation number
+      -> Maybe Word32 -- ^ Additional argument
+      -> Get Instruction -- ^ Instruction parser
+getOp opnum arg = if (opnum == 6) then return (AccGlobal $ fromIntegral $ fromJust arg) else
+                  if (opnum == 19) then return (Push) else
+                  fail "getInstruction: unrecognized opcode"
