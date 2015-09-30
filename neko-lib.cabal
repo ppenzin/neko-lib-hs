@@ -16,11 +16,11 @@ data-files:
 
 Library
   hs-source-dirs:      src/lib
-  exposed-modules:     Neko.Bytecode, Neko.Bytecode.Globals, Neko.Bytecode.Instructions
-  build-depends:       base, bytestring, binary
+  exposed-modules:     Neko.Bytecode, Neko.Bytecode.Globals, Neko.Bytecode.Instructions, Neko.Hashtbl
+  build-depends:       base, bytestring, binary, containers
 
 Test-suite test-lib
   type:                exitcode-stdio-1.0
   hs-source-dirs:      src/test, src/lib
   main-is:             TestAll.hs
-  build-depends:       base, bytestring, binary, tasty==0.10.1.2, tasty-smallcheck==0.8.0.1
+  build-depends:       base, bytestring, binary, containers, tasty==0.10.1.2, tasty-smallcheck==0.8.0.1

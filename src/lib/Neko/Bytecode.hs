@@ -20,11 +20,12 @@ import Data.Either
 import Data.Word
 import Data.Int
 
+import Neko.Hashtbl as H
 import Neko.Bytecode.Globals
 import Neko.Bytecode.Instructions
 
 -- | A Neko module. Consists of global entities and a list of instructions
-data Module = N {globals::[Global], fields::[String], code::[Instruction]} deriving (Show, Eq)
+data Module = N {globals::[Global], fields::Hashtbl, code::[Instruction]} deriving (Show, Eq)
 
 -- | Parse module from ByteString.
 --   Return module or return an error string
@@ -73,7 +74,10 @@ getMagicCheck = getLazyByteString 4 >>= \b -> return (b == BSChar.pack "NEKO")
 getField :: Get String
 getField = getLazyByteStringNul >>= \b -> return (BSChar.unpack b)
 
--- | Grab a list of fields (of known length) from a bytestring
-getFields :: Word32 -> Get [String]
-getFields 0 = return []
-getFields n = getField >>= \s -> getFields (n - 1) >>= \ss -> return (s:ss)
+-- | Get a list of fields into a hashtable indexed by their hash values
+getFields :: Word32 -> Get Hashtbl
+getFields 0 = return H.empty
+getFields n = getField
+          >>= \s -> getFields (n - 1)
+          >>= \h -> if (memberString s h) then fail ("Duplicate field " ++ s)
+                    else return (H.insertString s h)

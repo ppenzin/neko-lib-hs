@@ -1,19 +1,20 @@
 import Test.Tasty
 import Test.Tasty.SmallCheck as SC
-import Data.ByteString.Lazy
+import Data.ByteString.Lazy as B
 
 import Neko.Bytecode
+import Neko.Hashtbl as H
 import Neko.Bytecode.Globals
 import Neko.Bytecode.Instructions
 
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Tests" [dasmTests, globalsReadTests, instrReadTests]
+tests = testGroup "Tests" [dasmTests, globalsReadTests, instrReadTests, hashTests]
 
 dasmTests = testGroup "Disassemble tests"
   [ SC.testProperty "Disassemble hello world" $
-      (readModule hello) == Right (N {globals=[GlobalString "Hello world!\n", GlobalVar "var"], fields=["print"], code=[AccGlobal 0, Push, AccBuiltin "print", Call 1]})
+      (readModule hello) == Right (N {globals=[GlobalString "Hello world!\n", GlobalVar "var"], fields=H.fromStringList["print"], code=[AccGlobal 0, Push, AccBuiltin "print", Call 1]})
   , SC.testProperty "Disassemble empty bytestring" $
       (readModule $ pack []) == Left "not enough bytes"
   , SC.testProperty "Invalid magic value" $
@@ -36,20 +37,27 @@ dasmTests = testGroup "Disassemble tests"
   , SC.testProperty "Invalid code size" $
       (readModule $ pack [0x4e, 0x45, 0x4b, 0x4f, 0x02, 0x00, 0x00, 0x00,  0x01, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF])
                                                                   == Left "Code size not between 0 and 0xFFFFFF"
+  , SC.testProperty "Duplicate field" $
+      (readModule $ pack [0x4e, 0x45, 0x4b, 0x4f, 0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x03, 0x0d, 0x00, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x21, 0x0a, 0x01, 0x00, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x00, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x00])
+                                                                  == Left "Duplicate field print"
   ]
 
 globalsReadTests = testGroup "Globals READ tests"
   [ SC.testProperty "Read string constant" $
       (readGlobals 1 $ pack [0x03, 0x0d, 0x00, 0x48, 0x65, 0x6c, 0x6c, 0x6f,  0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x21, 0x0a])
-                                                                  == Just ([GlobalString "Hello world!\n"], empty)
+                                                                  == Just ([GlobalString "Hello world!\n"], B.empty)
   , SC.testProperty "Read global variable" $
       (readGlobals 1 $ pack [0x01, 0x48, 0x65, 0x00])
-                                                                  == Just ([GlobalVar "He"], empty)
+                                                                  == Just ([GlobalVar "He"], B.empty)
   ]
 
 instrReadTests = testGroup "Instructions READ tests"
-  [ SC.testProperty "AccGlobal 0" $ (readInstruction $ pack [0x31]) == ((Just (AccGlobal 0)), empty)
-  , SC.testProperty "Push" $ (readInstruction $ pack [0x4c]) == (Just (Push), empty)
+  [ SC.testProperty "AccGlobal 0" $ (readInstruction $ pack [0x31]) == ((Just (AccGlobal 0)), B.empty)
+  , SC.testProperty "Push" $ (readInstruction $ pack [0x4c]) == (Just (Push), B.empty)
+  ]
+
+hashTests = testGroup "Hashtbl tests"
+  [ SC.testProperty "Simple hash (of string 'print')" $ H.hash "print" == 0xC88B582D
   ]
 
 hello = pack [
