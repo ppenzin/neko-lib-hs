@@ -20,6 +20,8 @@ import Data.Either
 import Data.Binary.Get
 import Data.ByteString.Lazy as BS
 
+import Neko.Hashtbl
+
 -- | Various NekoVM instructions
 data Instruction = 
         -- getters
@@ -96,46 +98,54 @@ data Instruction =
 
 -- | Read instructions
 readInstructions :: Word32 -- ^ code size
+                 -> Hashtbl -- ^ context (names of fields)
                  -> ByteString -- ^ bytes to read from
                  -> (ByteString, String, Maybe [Instruction]) -- ^ unconsumed input, status message and list of instructions
-readInstructions n bs = if (isRight res) then (rest, "Success", Just (is)) else (rest', err, Nothing)
-    where res = runGetOrFail (getInstructions n) bs
+readInstructions n ids bs = if (isRight res) then (rest, "Success", Just (is)) else (rest', err, Nothing)
+    where res = runGetOrFail (getInstructions n ids) bs
           Right (rest, _, is) = res
           Left (rest', _, err) = res
 
 -- | Read a single bytecode instruction
-readInstruction :: ByteString -- ^ Input
+readInstruction :: Hashtbl -- ^ Names of fieds for the module
+                -> ByteString -- ^ Input
                 -> (Maybe Instruction, ByteString) -- ^ Result or nothing, unconsumed input
-readInstruction bs = if (isRight res) then (Just (i), rest) else (Nothing, rest')
-    where res = runGetOrFail getInstruction bs
+readInstruction ids bs = if (isRight res) then (Just (i), rest) else (Nothing, rest')
+    where res = runGetOrFail (getInstruction ids) bs
           Right (rest, _, i) = res
           Left (rest', _, _) = res
 
 -- | Grab instructions from a bytestring
-getInstructions :: Word32 -- ^ number of instruction
+getInstructions :: Word32 -- ^ number of instructions
+                -> Hashtbl -- ^ Builtins hashtable to provide context
                 -> Get [Instruction] -- ^ decoder
-getInstructions 0 = return []
-getInstructions n = getInstruction
-                >>= \i -> getInstructions (n - 1) 
-                >>= \is -> return (i:is)
+getInstructions 0 _ = return []
+getInstructions n ids = getInstruction ids
+                    >>= \i -> getInstructions (n - 1) ids
+                    >>= \is -> return (i:is)
 
 -- | Grab a single instruction from a bytestring
-getInstruction :: Get Instruction
-getInstruction = getWord8
-             >>= \b -> return (b .&. 3)
-             >>= \code ->      if (code == 0) then getOp (b `shiftR` 2) Nothing
-                          else if (code == 1) then getOp (b `shiftR` 3) (Just $ fromIntegral $ b `shiftR` 2 .&. 1)
-                          else if (code == 2) then
-                                   getWord8 >>= \w -> if (b == 2) then (getOp (fromIntegral w) Nothing)
-                                                      else (getOp (b `shiftR` 2) (Just (fromIntegral w)))
-                          else if (code == 3) then
-                                   getWord32le >>= \i -> getOp (b `shiftR` 2) (Just i)
-                          else fail "getInstruction: unrecognized opcode group"
+-- Some instruction acces filds by using hashes of the names, therefore
+-- require a hash table with field names.
+getInstruction :: Hashtbl -- ^ Builtins hashtable for getting names
+               -> Get Instruction -- ^ Instruction parser
+getInstruction ids
+             = getWord8
+           >>= \b -> return (b .&. 3)
+           >>= \code ->  if (code == 0) then getOp (b `shiftR` 2) Nothing ids
+                    else if (code == 1) then getOp (b `shiftR` 3) (Just $ fromIntegral $ b `shiftR` 2 .&. 1) ids
+                    else if (code == 2) then
+                             getWord8 >>= \w -> if (b == 2) then (getOp (fromIntegral w) Nothing ids)
+                                                else (getOp (b `shiftR` 2) (Just (fromIntegral w)) ids)
+                    else if (code == 3) then
+                             getWord32le >>= \i -> getOp (b `shiftR` 2) (Just i) ids
+                    else fail "getInstruction: unrecognized opcode group"
 
 -- | Second level of instruction read logic
 getOp :: Word8 -- ^ Operation number
       -> Maybe Word32 -- ^ Additional argument
+      -> Hashtbl -- ^ Some instructions require access to builtins hashtable
       -> Get Instruction -- ^ Instruction parser
-getOp opnum arg = if (opnum == 6) then return (AccGlobal $ fromIntegral $ fromJust arg) else
-                  if (opnum == 19) then return (Push) else
-                  fail "getInstruction: unrecognized opcode"
+getOp opnum arg ids = if (opnum == 6) then return (AccGlobal $ fromIntegral $ fromJust arg) else
+                      if (opnum == 19) then return (Push) else
+                      fail "getInstruction: unrecognized opcode"

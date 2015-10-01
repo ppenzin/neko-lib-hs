@@ -64,7 +64,10 @@ getModuleContents globals fields code
      = if (globals > 0xFFFF) then fail "Number of globals not between 0 and 0xFFFF" else
        if (fields > 0xFFFF) then fail "Number of fields not between 0 and 0xFFFF" else
        if (code > 0xFFFFFF) then fail "Code size not between 0 and 0xFFFFFF" else
-       N <$> (getGlobals globals) <*> (getFields fields) <*> (getInstructions code)
+       getGlobals globals
+    >>= \g -> getFields fields
+    >>= \f -> getInstructions code f
+    >>= \i -> return (N {globals = g, fields = f, code = i})
      
 -- | A check for next four bytes matching neko magic value
 getMagicCheck :: Get Bool

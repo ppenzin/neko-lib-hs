@@ -52,8 +52,8 @@ globalsReadTests = testGroup "Globals READ tests"
   ]
 
 instrReadTests = testGroup "Instructions READ tests"
-  [ SC.testProperty "AccGlobal 0" $ (readInstruction $ pack [0x31]) == ((Just (AccGlobal 0)), B.empty)
-  , SC.testProperty "Push" $ (readInstruction $ pack [0x4c]) == (Just (Push), B.empty)
+  [ SC.testProperty "AccGlobal 0" $ (readInstruction H.empty $ pack [0x31]) == ((Just (AccGlobal 0)), B.empty)
+  , SC.testProperty "Push" $ (readInstruction H.empty $ pack [0x4c]) == (Just (Push), B.empty)
   ]
 
 hashTests = testGroup "Hashtbl tests"
