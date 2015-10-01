@@ -7,7 +7,7 @@ Maintainer  : penzin.dev@gmail.com
 Stability   : experimental
 Portability : cross-platform
 
-A minimal support for Neko hashtable type needed for assembly and disassembly
+A minimal support for Neko hashtable type needed for working with tables of fields
 
 -}
 module Neko.Hashtbl where
@@ -21,12 +21,12 @@ import Data.Word
 --   but we will focus on strings, since those are necessary for assembly and disassembly
 type Hashtbl = M.Map Word32 String
 
--- | Neko hash function for strings
+-- | Neko 'hash_field' function
 hash :: String -> Word32
 hash s = hash' bs
     where bs = B.reverse $ BC.pack s
           hash' b | B.null b  = 0
-          hash' b | otherwise = (hash' $ B.tail b) * 19 + (fromIntegral $ B.head b)
+          hash' b | otherwise = (hash' $ B.tail b) * 223 + (fromIntegral $ B.head b)
 
 -- | Create an empty Hashtbl, wrapper for corresponding Map function
 empty :: Hashtbl
