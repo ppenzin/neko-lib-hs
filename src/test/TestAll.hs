@@ -15,7 +15,7 @@ tests = testGroup "Tests" [dasmTests, globalsReadTests, instrReadTests, hashTest
 
 dasmTests = testGroup "Disassemble tests"
   [ SC.testProperty "Disassemble hello world" $
-      (readModule hello) == Right (N {globals=[GlobalString "Hello world!\n", GlobalVar "var"], fields=H.fromStringList["print"], code=[AccGlobal 0, Push, AccBuiltin "print", Call 1]})
+      (readModule hello) == Right (N {globals=[GlobalString "Hello world!\n", GlobalVar ""], fields=H.fromStringList["print"], code=[AccGlobal 0, Push, AccBuiltin "print", Call 1]})
   , SC.testProperty "Disassemble empty bytestring" $
       (readModule $ pack []) == Left "not enough bytes"
   , SC.testProperty "Invalid magic value" $
@@ -58,6 +58,7 @@ instrReadTests = testGroup "Instructions READ tests"
   , SC.testProperty "AccBuiltin \"print\"" $ (readInstruction (H.fromStringList ["print"]) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xc8]) == (Just (AccBuiltin "print"), B.empty)
   , SC.testProperty "AccBuiltin -- wrong hash" $ (runGetOrFail (getInstruction (H.fromStringList ["print"])) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xFF]) == (Left (B.empty ,5,"Field not found for AccBuiltin (ff8b582d)"))
   , SC.testProperty "AccBuiltin -- missing field" $ (runGetOrFail (getInstruction H.empty) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xc8]) == (Left (B.empty ,5,"Field not found for AccBuiltin (c88b582d)"))
+  , SC.testProperty "Call 1" $ (readInstruction H.empty $ pack [0xad]) == (Just (Call 1), B.empty)
   ]
 
 hashTests = testGroup "Hashtbl tests"

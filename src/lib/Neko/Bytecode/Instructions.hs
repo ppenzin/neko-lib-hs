@@ -117,12 +117,12 @@ readInstruction ids bs = if (isRight res) then (Just (i), rest) else (Nothing, r
           Left (rest', _, _) = res
 
 -- | Grab instructions from a bytestring
-getInstructions :: Word32 -- ^ number of instructions
+getInstructions :: Word32 -- ^ code size - number of instructions+arguments left to parse
                 -> Hashtbl -- ^ Builtins hashtable to provide context
                 -> Get [Instruction] -- ^ decoder
 getInstructions 0 _ = return []
-getInstructions n ids = getInstruction ids
-                    >>= \i -> getInstructions (n - 1) ids
+getInstructions n ids = if (n < 0) then fail "Stepped over code size" else getInstruction ids
+                    >>= \i -> getInstructions (n - (if (hasParam i) then 2 else 1)) ids
                     >>= \is -> return (i:is)
 
 -- | Grab a single instruction from a bytestring
@@ -154,4 +154,34 @@ getOp opnum arg ids
                         then return (AccBuiltin (fromJust $ H.lookup (fromJust arg) ids))
                         else fail ("Field not found for AccBuiltin (" ++ (showHex (fromJust arg) "") ++ ")")
             else if (opnum == 19) then return (Push)
+            else if (opnum == 21) then return (Call $ fromIntegral $ fromJust arg)
             else fail "getInstruction: unrecognized opcode"
+
+-- | Determine whether instruction has a parameter
+hasParam :: Instruction -> Bool
+hasParam (AccInt _)     = True
+hasParam (AccStack _)   = True
+hasParam (AccGlobal _)  = True
+hasParam (AccEnv _)     = True
+hasParam (AccField _)   = True
+hasParam (AccIndex _)   = True
+hasParam (AccBuiltin _) = True
+hasParam (SetStack _)   = True
+hasParam (SetGlobal _)  = True
+hasParam (SetEnv _)     = True
+hasParam (SetField _)   = True
+hasParam (SetIndex _)   = True
+hasParam (Pop _)        = True
+hasParam (Call _)       = True
+hasParam (ObjCall _)    = True
+hasParam (Jump _)       = True
+hasParam (JumpIf _)     = True
+hasParam (JumpIfNot _)  = True
+hasParam (Trap _)       = True
+hasParam (Ret _)        = True
+hasParam (MakeEnv _)    = True
+hasParam (MakeArray _)  = True
+hasParam (JumpTable _)  = True
+hasParam (Apply _)      = True
+hasParam (TailCall _)   = True
+hasParam _              = False

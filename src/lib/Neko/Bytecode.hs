@@ -41,7 +41,7 @@ readModule bs = if (isRight res) then
 data ModuleHeader = ModuleHeader {
     numGlobals :: Word32, -- ^ Number of globals
     numFields  :: Word32, -- ^ Number of fields
-    codeSize   :: Word32  -- ^ Code size (number of instructions
+    codeSize   :: Word32  -- ^ Code size (number of instructions+arguments)
 }
 
 -- | Pick module header fields from a bytestring. Requires bytestring to start with the first field.
