@@ -19,8 +19,9 @@ import Data.Maybe
 import Data.Either
 import Data.Binary.Get
 import Data.ByteString.Lazy as BS
+import Numeric (showHex)
 
-import Neko.Hashtbl
+import Neko.Hashtbl as H
 
 -- | Various NekoVM instructions
 data Instruction = 
@@ -146,6 +147,11 @@ getOp :: Word8 -- ^ Operation number
       -> Maybe Word32 -- ^ Additional argument
       -> Hashtbl -- ^ Some instructions require access to builtins hashtable
       -> Get Instruction -- ^ Instruction parser
-getOp opnum arg ids = if (opnum == 6) then return (AccGlobal $ fromIntegral $ fromJust arg) else
-                      if (opnum == 19) then return (Push) else
-                      fail "getInstruction: unrecognized opcode"
+getOp opnum arg ids
+               = if (opnum == 6) then return (AccGlobal $ fromIntegral $ fromJust arg)
+            else if (opnum == 11) then
+                        if (member (fromJust arg) ids)
+                        then return (AccBuiltin (fromJust $ H.lookup (fromJust arg) ids))
+                        else fail ("Field not found for AccBuiltin (" ++ (showHex (fromJust arg) "") ++ ")")
+            else if (opnum == 19) then return (Push)
+            else fail "getInstruction: unrecognized opcode"
