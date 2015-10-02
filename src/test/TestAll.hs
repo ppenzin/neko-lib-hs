@@ -2,6 +2,7 @@ import Test.Tasty
 import Test.Tasty.SmallCheck as SC
 import Data.ByteString.Lazy as B
 import Data.Binary.Get
+import Data.Binary.Put
 
 import Neko.Bytecode
 import Neko.Hashtbl as H
@@ -11,7 +12,7 @@ import Neko.Bytecode.Instructions
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Tests" [dasmTests, globalsReadTests, instrReadTests, hashTests]
+tests = testGroup "Tests" [dasmTests, globalsReadTests, instrReadTests, hashTests, binaryCheckTests]
 
 dasmTests = testGroup "Disassemble tests"
   [ SC.testProperty "Disassemble hello world" $
@@ -71,3 +72,13 @@ hello = pack [
               0x01, 0x00, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x00, 0x31, 0x4c, 0x2f, 0x2d, 0x58, 0x8b, 0xc8, 0xad
              ]
 
+binaryCheckTests = testGroup "Binary produce/consume tests" 
+  [ checkInstruction H.empty $ AccGlobal 1
+  , checkInstruction (H.fromStringList ["someBuiltin"]) $ AccBuiltin "someBuiltin"
+  , checkInstruction H.empty Push
+  , checkInstruction H.empty $ Call 0
+  ]
+
+-- | Assemble and dissassemble an instruction
+checkInstruction ids instruction
+    = SC.testProperty ("Check binary read/write for " ++ (show instruction)) $ (runGet (getInstruction ids) $ runPut $ putInstruction instruction) == instruction

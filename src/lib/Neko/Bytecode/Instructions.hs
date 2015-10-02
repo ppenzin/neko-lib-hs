@@ -18,6 +18,7 @@ import Data.Word
 import Data.Maybe
 import Data.Either
 import Data.Binary.Get
+import Data.Binary.Put
 import Data.ByteString.Lazy as BS
 import Numeric (showHex)
 
@@ -156,6 +157,25 @@ getOp opnum arg ids
             else if (opnum == 19) then return (Push)
             else if (opnum == 21) then return (Call $ fromIntegral $ fromJust arg)
             else fail "getInstruction: unrecognized opcode"
+
+-- | Get integer opcode
+opcode :: Instruction -- ^ Instruction to process
+       -> (Word8, Maybe Word32) -- ^ Opcode and additional argument
+opcode (AccGlobal n)  = (6,  Just $ fromIntegral n)
+opcode (AccBuiltin s) = (11, Just $ hash s)
+opcode (Push)         = (19, Nothing)
+opcode (Call n)       = (21, Just $ fromIntegral n)
+opcode x              = error ("TODO implement " ++ (show x))
+
+-- | Write instruction out using Put monad
+putInstruction :: Instruction -> Put
+putInstruction i
+    = let (op, arg) = opcode i
+          n = fromJust arg
+      in if (isNothing arg) then (putWord8 $ op `shiftL` 2)
+    else if (op < 32 && (n == 0 || n == 1)) then (putWord8 $ (op `shiftL` 3) .|. ((fromIntegral n) `shiftL` 2) .|. 1)
+    else if (n >= 0 && n <= 0xFF) then (putWord8 ((op `shiftL` 2) .|. 2) >> putWord8 (fromIntegral n))
+    else (putWord8 ((op `shiftL` 2) .|. 3) >> putWord32le n)
 
 -- | Determine whether instruction has a parameter
 hasParam :: Instruction -> Bool
