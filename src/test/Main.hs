@@ -31,29 +31,41 @@ import Instructions
 import Instructions.Read
 import Hashtable
 
+-- Option to enable Neko execution
+newtype Neko = Neko Bool
+  deriving (Eq, Ord, Typeable)
+
+instance IsOption Neko where
+  defaultValue = Neko False
+  parseValue = fmap Neko . safeRead
+  optionName = return "neko"
+  optionHelp = return "Enable Neko runtime tests"
+  optionCLParser = flagCLParser (Just 'n')(Neko True)
+
 -- Option to get Neko executable
-type NekoExe = FilePath
+newtype NekoExe = NekoExe FilePath
   deriving (Eq, Ord, Typeable)
 
 instance IsOption NekoExe where
-  defaultValue = "neko"
+  defaultValue = NekoExe ""
   parseValue = parseNekoExe
-  optionName = return "neko"
-  optionHelp = return "Run neko bytecode, value -- path to Neko executable, empty sets it to `neko'"
+  optionName = return "neko-exe"
+  optionHelp = return "Custom path to Neko executable, implies --neko"
 
 parseNekoExe :: String -> Maybe NekoExe
-parseNekoExe s = if (null s) then return (defaultValue NekoExe) else return (s)
+parseNekoExe s = return (NekoExe s)
 
 main = defaultMainWithIngredients ings $
-  askOption $ \(nekoExe) ->
+  askOption $ \(NekoExe nekoExe) ->
+  askOption $ \(Neko runNeko) ->
   testGroup "Tests" $
   defaultTests ++
-  if (isNothing nekoExe)
+  if ((not runNeko) && nekoExe == "")
     then []
-    else [ runBytecodeTests $ fromJust nekoExe ]
+    else [ runBytecodeTests $ if (not $ null nekoExe) then nekoExe else "neko"]
   where
     ings =
-      includingOptions [Option (Proxy :: Proxy NekoExe)] :
+      includingOptions [Option (Proxy :: Proxy NekoExe), Option (Proxy :: Proxy Neko)] :
       defaultIngredients
 
 defaultTests :: [TestTree]
