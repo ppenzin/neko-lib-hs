@@ -23,4 +23,4 @@ Test-suite test-lib
   type:                exitcode-stdio-1.0
   hs-source-dirs:      src/test, src/lib
   main-is:             Main.hs
-  build-depends:       base, bytestring, binary, containers, optparse-applicative, tagged, tasty==0.10.1.2, tasty-smallcheck==0.8.0.1, tasty-hunit==0.9.2
+  build-depends:       base, bytestring, binary, containers, optparse-applicative, tagged, process, random, directory, tasty==0.10.1.2, tasty-smallcheck==0.8.0.1, tasty-hunit==0.9.2, temporary==1.2.0.3
