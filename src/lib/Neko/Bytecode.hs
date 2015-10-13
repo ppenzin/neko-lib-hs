@@ -15,6 +15,7 @@ module Neko.Bytecode where
 import Data.ByteString.Lazy as BS
 import Data.ByteString.Lazy.Char8 as BSChar
 import Data.Binary.Get
+import Data.Binary.Put
 import Data.Maybe
 import Data.Either
 import Data.Word
@@ -84,3 +85,26 @@ getFields n = getField
           >>= \s -> getFields (n - 1)
           >>= \h -> if (memberString s h) then fail ("Duplicate field " ++ s)
                     else return (H.insertString s h)
+
+-- | Produce a sequence of null-terminated strings
+prepStrings :: [String] -> ByteString
+prepStrings [] = BS.empty
+prepStrings (s:ss) = BS.append (BS.snoc (BSChar.pack s) 0x0) (prepStrings ss)
+
+-- | Generate binary for fields
+putFields :: Hashtbl -> Put
+putFields = putLazyByteString . prepStrings . H.elems
+
+-- | Generate binary for a module
+--   TODO: we are not running any checks on sizes of header fields (like we do 
+--   while reading), that needs to be implemented, otherwise user will get surprised
+--   by Neko runtime.
+putModule :: Module -> Put
+putModule m = putLazyByteString (BSChar.pack "NEKO") -- put magic value
+           >> putWord32le (fromIntegral $ Prelude.length $ globals m) -- put number of globals
+           >> putWord32le (fromIntegral $ Prelude.length $ H.elems $ fields m) -- put number of fields
+           >> putWord32le (sum $ Prelude.map (\x -> if (hasParam x) then 2 else 1)  $ code m) -- put code size 
+           {- Contents of the module -}
+           >> putGlobals (globals m)
+           >> putFields (fields m) 
+           >> putInstructions (code m) 

@@ -177,6 +177,11 @@ putInstruction i
     else if (n >= 0 && n <= 0xFF) then (putWord8 ((op `shiftL` 2) .|. 2) >> putWord8 (fromIntegral n))
     else (putWord8 ((op `shiftL` 2) .|. 3) >> putWord32le n)
 
+-- | Write a few instructions out using Put monad
+putInstructions :: [Instruction] -> Put
+putInstructions [] = return ()
+putInstructions (i:is) = putInstruction i >> putInstructions is
+
 -- | Determine whether instruction has a parameter
 hasParam :: Instruction -> Bool
 hasParam (AccInt _)     = True

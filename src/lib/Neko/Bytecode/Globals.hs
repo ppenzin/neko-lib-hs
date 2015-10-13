@@ -15,6 +15,7 @@ module Neko.Bytecode.Globals where
 import Data.ByteString.Lazy as BS
 import Data.ByteString.Lazy.Char8 as BSChar
 import Data.Binary.Get
+import Data.Binary.Put
 import Data.Either
 import Data.Maybe
 import Data.Word
@@ -71,3 +72,15 @@ getGlobalString :: Get Global
 getGlobalString = getWord16le
               >>= \length -> getLazyByteString (fromIntegral length)
               >>= \s -> return (GlobalString $ BSChar.unpack s)
+
+-- | Write a global to a bytestring
+putGlobal :: Global -> Put
+putGlobal (GlobalVar s) = putWord8 1 >> putLazyByteString (BSChar.pack s) >> putWord8 0
+putGlobal (GlobalString s) = putWord8 3
+                          >> putWord16le (fromIntegral $ Prelude.length s) >> putLazyByteString (BSChar.pack s)
+putGlobal g = error ("Unimplemented: " ++ (show g)) -- Remove after all implemented
+
+-- | Write a list of globals to a bytestring
+putGlobals :: [Global] -> Put
+putGlobals [] = return ()
+putGlobals (g:gs) = putGlobal g >> putGlobals gs

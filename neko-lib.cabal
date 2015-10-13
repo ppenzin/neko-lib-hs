@@ -22,5 +22,5 @@ Library
 Test-suite test-lib
   type:                exitcode-stdio-1.0
   hs-source-dirs:      src/test, src/lib
-  main-is:             TestAll.hs
+  main-is:             Main.hs
   build-depends:       base, bytestring, binary, containers, tasty==0.10.1.2, tasty-smallcheck==0.8.0.1

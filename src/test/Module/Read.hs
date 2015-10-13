@@ -1,18 +1,26 @@
+{-|
+Module      : Module.Read
+Description : Read module tests
+Copyright   : (c) Petr Penzin, 2015
+License     : BSD2
+Maintainer  : penzin.dev@gmail.com
+Stability   : stable
+Portability : cross-platform
+
+Binary read tests on Neko module level
+
+-}
+module Module.Read where
+
 import Test.Tasty
 import Test.Tasty.SmallCheck as SC
 import Data.ByteString.Lazy as B
 import Data.Binary.Get
-import Data.Binary.Put
 
 import Neko.Bytecode
-import Neko.Hashtbl as H
-import Neko.Bytecode.Globals
 import Neko.Bytecode.Instructions
-
-main = defaultMain tests
-
-tests :: TestTree
-tests = testGroup "Tests" [dasmTests, globalsReadTests, instrReadTests, hashTests, binaryCheckTests]
+import Neko.Bytecode.Globals
+import Neko.Hashtbl as H
 
 dasmTests = testGroup "Disassemble tests"
   [ SC.testProperty "Disassemble hello world" $
@@ -44,41 +52,9 @@ dasmTests = testGroup "Disassemble tests"
                                                                   == Left "Duplicate field print"
   ]
 
-globalsReadTests = testGroup "Globals READ tests"
-  [ SC.testProperty "Read string constant" $
-      (readGlobals 1 $ pack [0x03, 0x0d, 0x00, 0x48, 0x65, 0x6c, 0x6c, 0x6f,  0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x21, 0x0a])
-                                                                  == Just ([GlobalString "Hello world!\n"], B.empty)
-  , SC.testProperty "Read global variable" $
-      (readGlobals 1 $ pack [0x01, 0x48, 0x65, 0x00])
-                                                                  == Just ([GlobalVar "He"], B.empty)
-  ]
-
-instrReadTests = testGroup "Instructions READ tests"
-  [ SC.testProperty "AccGlobal 0" $ (readInstruction H.empty $ pack [0x31]) == ((Just (AccGlobal 0)), B.empty)
-  , SC.testProperty "Push" $ (readInstruction H.empty $ pack [0x4c]) == (Just (Push), B.empty)
-  , SC.testProperty "AccBuiltin \"print\"" $ (readInstruction (H.fromStringList ["print"]) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xc8]) == (Just (AccBuiltin "print"), B.empty)
-  , SC.testProperty "AccBuiltin -- wrong hash" $ (runGetOrFail (getInstruction (H.fromStringList ["print"])) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xFF]) == (Left (B.empty ,5,"Field not found for AccBuiltin (ff8b582d)"))
-  , SC.testProperty "AccBuiltin -- missing field" $ (runGetOrFail (getInstruction H.empty) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xc8]) == (Left (B.empty ,5,"Field not found for AccBuiltin (c88b582d)"))
-  , SC.testProperty "Call 1" $ (readInstruction H.empty $ pack [0xad]) == (Just (Call 1), B.empty)
-  ]
-
-hashTests = testGroup "Hashtbl tests"
-  [ SC.testProperty "Simple hash (of string 'print')" $ H.hash "print" == 0xC88B582D
-  ]
-
 hello = pack [
               0x4e, 0x45, 0x4b, 0x4f, 0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00,
               0x03, 0x0d, 0x00, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x21, 0x0a,
               0x01, 0x00, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x00, 0x31, 0x4c, 0x2f, 0x2d, 0x58, 0x8b, 0xc8, 0xad
              ]
 
-binaryCheckTests = testGroup "Binary produce/consume tests" 
-  [ checkInstruction H.empty $ AccGlobal 1
-  , checkInstruction (H.fromStringList ["someBuiltin"]) $ AccBuiltin "someBuiltin"
-  , checkInstruction H.empty Push
-  , checkInstruction H.empty $ Call 0
-  ]
-
--- | Assemble and dissassemble an instruction
-checkInstruction ids instruction
-    = SC.testProperty ("Check binary read/write for " ++ (show instruction)) $ (runGet (getInstruction ids) $ runPut $ putInstruction instruction) == instruction
