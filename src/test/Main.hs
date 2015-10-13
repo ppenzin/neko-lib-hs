@@ -32,20 +32,20 @@ import Instructions.Read
 import Hashtable
 
 -- Option to get Neko executable
-newtype NekoExe = NekoExe (Maybe FilePath)
+type NekoExe = FilePath
   deriving (Eq, Ord, Typeable)
 
 instance IsOption NekoExe where
-  defaultValue = NekoExe Nothing
+  defaultValue = "neko"
   parseValue = parseNekoExe
   optionName = return "neko"
   optionHelp = return "Run neko bytecode, value -- path to Neko executable, empty sets it to `neko'"
 
 parseNekoExe :: String -> Maybe NekoExe
-parseNekoExe s = if (null s) then return (NekoExe (Just "neko")) else return (NekoExe (Just s))
+parseNekoExe s = if (null s) then return (defaultValue NekoExe) else return (s)
 
 main = defaultMainWithIngredients ings $
-  askOption $ \(NekoExe nekoExe) ->
+  askOption $ \(nekoExe) ->
   testGroup "Tests" $
   defaultTests ++
   if (isNothing nekoExe)
