@@ -62,7 +62,7 @@ main = defaultMainWithIngredients ings $
   defaultTests ++
   if ((not runNeko) && nekoExe == "")
     then []
-    else [ runBytecodeTests $ if (not $ null nekoExe) then nekoExe else "neko"]
+    else [ runBytecodeTests $ if (null nekoExe) then "neko" else nekoExe]
   where
     ings =
       includingOptions [Option (Proxy :: Proxy NekoExe), Option (Proxy :: Proxy Neko)] :
