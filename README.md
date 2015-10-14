@@ -29,7 +29,20 @@ Full build cycle:
 $ cabal configure --enable-tests && cabal build && cabal test
 ```
 
-Configure is only needed for the first build or after changing .cabal file.
+Configure is only needed for the first build or after changing .cabal file. To
+enable tests that use Neko to run the bytecode add --neko option to the test
+executable:
+
+```
+$ cabal test --test-option=--neko
+```
+
+That would pick `neko` executable from the system path. For more control one
+can specify path to neko executable:
+
+```
+$ cabal test --test-options="--neko --neko-exe /path/to/neko/exe"
+```
 
 ## Documentation
 
