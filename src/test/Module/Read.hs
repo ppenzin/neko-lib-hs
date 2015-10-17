@@ -7,7 +7,7 @@ Maintainer  : penzin.dev@gmail.com
 Stability   : stable
 Portability : cross-platform
 
-Binary read tests on Neko module level
+Binary read tests on Binary.Neko module level
 
 -}
 module Module.Read where
@@ -17,10 +17,10 @@ import Test.Tasty.SmallCheck as SC
 import Data.ByteString.Lazy as B
 import Data.Binary.Get
 
-import Neko.Bytecode
-import Neko.Bytecode.Instructions
-import Neko.Bytecode.Globals
-import Neko.Hashtbl as H
+import Binary.Neko.Module
+import Binary.Neko.Instructions
+import Binary.Neko.Globals
+import Binary.Neko.Hashtbl as H
 
 dasmTests = testGroup "Disassemble tests"
   [ SC.testProperty "Disassemble hello world" $

@@ -18,8 +18,8 @@ import Data.ByteString.Lazy as B
 import Data.Binary.Get
 import Data.Binary.Put
 
-import Neko.Bytecode.Instructions
-import Neko.Hashtbl as H
+import Binary.Neko.Instructions
+import Binary.Neko.Hashtbl as H
 
 binaryCheckInstructions = testGroup "produce/consume instruction"
   [ checkInstruction H.empty $ AccGlobal 1

@@ -39,7 +39,7 @@ instance IsOption Neko where
   defaultValue = Neko False
   parseValue = fmap Neko . safeRead
   optionName = return "neko"
-  optionHelp = return "Enable Neko runtime tests"
+  optionHelp = return "Enable Binary.Neko runtime tests"
   optionCLParser = flagCLParser (Just 'n')(Neko True)
 
 -- Option to get Neko executable
@@ -50,7 +50,7 @@ instance IsOption NekoExe where
   defaultValue = NekoExe ""
   parseValue = parseNekoExe
   optionName = return "neko-exe"
-  optionHelp = return "Custom path to Neko executable, implies --neko"
+  optionHelp = return "Custom path to Binary.Neko executable, implies --neko"
 
 parseNekoExe :: String -> Maybe NekoExe
 parseNekoExe s = return (NekoExe s)

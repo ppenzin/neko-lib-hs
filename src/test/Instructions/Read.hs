@@ -17,8 +17,8 @@ import Test.Tasty.SmallCheck as SC
 import Data.ByteString.Lazy as B
 import Data.Binary.Get
 
-import Neko.Bytecode.Instructions
-import Neko.Hashtbl as H
+import Binary.Neko.Instructions
+import Binary.Neko.Hashtbl as H
 
 instrReadTests = testGroup "Instructions READ tests"
   [ SC.testProperty "AccGlobal 0" $ (readInstruction H.empty $ pack [0x31]) == ((Just (AccGlobal 0)), B.empty)

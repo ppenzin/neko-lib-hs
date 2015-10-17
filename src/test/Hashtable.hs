@@ -15,7 +15,7 @@ module Hashtable where
 import Test.Tasty
 import Test.Tasty.SmallCheck as SC
 
-import Neko.Hashtbl as H
+import Binary.Neko.Hashtbl as H
 
 -- Happy path test :(
 hashTests = testGroup "Hashtbl tests"

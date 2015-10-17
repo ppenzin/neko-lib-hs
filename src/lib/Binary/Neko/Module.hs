@@ -1,16 +1,16 @@
 {-|
-Module      : Neko.Bytecode
-Description : Emit and parse Neko bytecode
+Module      : Binary.Neko.Module
+Description : Emit and parse Binary.Neko bytecode
 Copyright   : (c) Petr Penzin, 2015
 License     : BSD2
 Maintainer  : penzin.dev@gmail.com
 Stability   : experimental
 Portability : cross-platform
 
-Primitives to emit and parse Neko bytecode, including instruction definitions.
+Primitives to emit and parse Binary.Neko bytecode, including instruction definitions.
 
 -}
-module Neko.Bytecode where
+module Binary.Neko.Module where
 
 import Data.ByteString.Lazy as BS
 import Data.ByteString.Lazy.Char8 as BSChar
@@ -21,11 +21,11 @@ import Data.Either
 import Data.Word
 import Data.Int
 
-import Neko.Hashtbl as H
-import Neko.Bytecode.Globals
-import Neko.Bytecode.Instructions
+import Binary.Neko.Hashtbl as H
+import Binary.Neko.Globals
+import Binary.Neko.Instructions
 
--- | A Neko module. Consists of global entities and a list of instructions
+-- | A Binary.Neko module. Consists of global entities and a list of instructions
 data Module = N {globals::[Global], fields::Hashtbl, code::[Instruction]} deriving (Show, Eq)
 
 -- | Parse module from ByteString.
@@ -98,7 +98,7 @@ putFields = putLazyByteString . prepStrings . H.elems
 -- | Generate binary for a module
 --   TODO: we are not running any checks on sizes of header fields (like we do 
 --   while reading), that needs to be implemented, otherwise user will get surprised
---   by Neko runtime.
+--   by Binary.Neko runtime.
 putModule :: Module -> Put
 putModule m = putLazyByteString (BSChar.pack "NEKO") -- put magic value
            >> putWord32le (fromIntegral $ Prelude.length $ globals m) -- put number of globals

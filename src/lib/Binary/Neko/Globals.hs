@@ -1,16 +1,16 @@
 {-|
-Module      : Neko.Bytecode.Globals
-Description : Global values for a Neko module
+Module      : Binary.Neko.Globals
+Description : Global values for a Binary.Neko module
 Copyright   : (c) Petr Penzin, 2015
 License     : BSD2
 Maintainer  : penzin.dev@gmail.com
 Stability   : experimental
 Portability : cross-platform
 
-Emit and parse global values for a Neko module.
+Emit and parse global values for a Binary.Neko module.
 
 -}
-module Neko.Bytecode.Globals where
+module Binary.Neko.Globals where
 
 import Data.ByteString.Lazy as BS
 import Data.ByteString.Lazy.Char8 as BSChar

@@ -1,16 +1,16 @@
 {-|
-Module      : Neko.Bytecode.Instructions
-Description : Emit and parse Neko instructions
+Module      : Binary.Neko.Instructions
+Description : Emit and parse Binary.Neko instructions
 Copyright   : (c) Petr Penzin, 2015
 License     : BSD2
 Maintainer  : penzin.dev@gmail.com
 Stability   : experimental
 Portability : cross-platform
 
-Types and primitives to deal with Neko instructions
+Types and primitives to deal with Binary.Neko instructions
 
 -}
-module Neko.Bytecode.Instructions where
+module Binary.Neko.Instructions where
 
 import Data.Int
 import Data.Bits
@@ -22,7 +22,7 @@ import Data.Binary.Put
 import Data.ByteString.Lazy as BS
 import Numeric (showHex)
 
-import Neko.Hashtbl as H
+import Binary.Neko.Hashtbl as H
 
 -- | Various NekoVM instructions
 data Instruction = 

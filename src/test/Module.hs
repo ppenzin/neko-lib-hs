@@ -18,10 +18,10 @@ import Data.ByteString.Lazy as B
 import Data.Binary.Get
 import Data.Binary.Put
 
-import Neko.Bytecode
-import Neko.Bytecode.Instructions
-import Neko.Bytecode.Globals
-import Neko.Hashtbl as H
+import Binary.Neko.Module
+import Binary.Neko.Instructions
+import Binary.Neko.Globals
+import Binary.Neko.Hashtbl as H
 
 binaryCheckModules = testGroup "produce/consume module"
   [ checkModule "Hello world" $ N {globals=[GlobalString "Hello world!\n"], fields=H.fromStringList["print"], code=[AccGlobal 0, Push, AccBuiltin "print", Call 1]}

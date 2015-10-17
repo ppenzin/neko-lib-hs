@@ -16,7 +16,7 @@ import Test.Tasty
 import Test.Tasty.SmallCheck as SC
 import Data.ByteString.Lazy as B
 
-import Neko.Bytecode.Globals
+import Binary.Neko.Globals
 
 globalsReadTests = testGroup "Globals READ tests"
   [ SC.testProperty "Read string constant" $

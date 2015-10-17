@@ -2,8 +2,8 @@ name:                neko-lib
 
 version:             0.0.0.1
 
-synopsis:            Neko VM code generation and disassembly library
-description:         A library to produce and read Neko bytecode
+synopsis:            Binary.Neko VM code generation and disassembly library
+description:         A library to produce and read Binary.Neko bytecode
 homepage:            http://github.com/ppenzin/neko-lib-hs/
 license:             BSD2
 license-file:        LICENSE
@@ -16,7 +16,7 @@ data-files:
 
 Library
   hs-source-dirs:      src/lib
-  exposed-modules:     Neko.Bytecode, Neko.Bytecode.Globals, Neko.Bytecode.Instructions, Neko.Hashtbl
+  exposed-modules:     Binary.Neko.Module, Binary.Neko.Globals, Binary.Neko.Instructions, Binary.Neko.Hashtbl
   build-depends:       base, bytestring, binary, containers, optparse-applicative, tagged
 
 Test-suite test-lib

@@ -1,5 +1,5 @@
 {-|
-Module      : Neko.Hashtbl
+Module      : Binary.Neko.Hashtbl
 Description : Minimal hashtable support
 Copyright   : (c) Petr Penzin, 2015
 License     : BSD2
@@ -7,21 +7,21 @@ Maintainer  : penzin.dev@gmail.com
 Stability   : experimental
 Portability : cross-platform
 
-A minimal support for Neko hashtable type needed for working with tables of fields
+A minimal support for Binary.Neko hashtable type needed for working with tables of fields
 
 -}
-module Neko.Hashtbl where
+module Binary.Neko.Hashtbl where
 
 import qualified Data.Map.Strict as M
 import Data.ByteString.Char8 as BC
 import Data.ByteString as B
 import Data.Word
 
--- | A minimal hashtable type. Neko supports hashing of all types,
+-- | A minimal hashtable type. Binary.Neko supports hashing of all types,
 --   but we will focus on strings, since those are necessary for assembly and disassembly
 type Hashtbl = M.Map Word32 String
 
--- | Neko 'hash_field' function
+-- | Binary.Neko 'hash_field' function
 hash :: String -> Word32
 hash s = hash' bs
     where bs = B.reverse $ BC.pack s

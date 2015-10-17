@@ -19,7 +19,7 @@ import Data.ByteString.Lazy as B
 import Data.Binary.Get
 import Data.Binary.Put
 
-import Neko.Bytecode.Globals
+import Binary.Neko.Globals
 
 binaryCheckGlobals = testGroup "produce/consume global"
   [ checkGlobal $ GlobalVar "foo"
