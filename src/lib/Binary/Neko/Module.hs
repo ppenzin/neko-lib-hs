@@ -12,6 +12,7 @@ Primitives to emit and parse Binary.Neko bytecode, including instruction definit
 -}
 module Binary.Neko.Module where
 
+import Control.Applicative
 import Data.ByteString.Lazy as BS
 import Data.ByteString.Lazy.Char8 as BSChar
 import Data.Binary.Get
