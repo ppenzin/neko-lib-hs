@@ -1,2 +1,2 @@
 language: haskell
-script: cabal configure && cabal build && cabal test
+ghc: 7.10
