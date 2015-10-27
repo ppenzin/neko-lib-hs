@@ -21,7 +21,8 @@ import Binary.Neko.Instructions
 import Binary.Neko.Hashtbl as H
 
 instrReadTests = testGroup "Instructions READ tests"
-  [ SC.testProperty "AccGlobal 0" $ (readInstruction H.empty $ pack [0x31]) == ((Just (AccGlobal 0)), B.empty)
+  [ SC.testProperty "AccNull" $ (readInstruction H.empty $ pack [0x00]) == ((Just (AccNull)), B.empty)
+  , SC.testProperty "AccGlobal 0" $ (readInstruction H.empty $ pack [0x31]) == ((Just (AccGlobal 0)), B.empty)
   , SC.testProperty "Push" $ (readInstruction H.empty $ pack [0x4c]) == (Just (Push), B.empty)
   , SC.testProperty "AccBuiltin \"print\"" $ (readInstruction (H.fromStringList ["print"]) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xc8]) == (Just (AccBuiltin "print"), B.empty)
   , SC.testProperty "AccBuiltin -- wrong hash" $ (runGetOrFail (getInstruction (H.fromStringList ["print"])) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xFF]) == (Left (B.empty ,5,"Field not found for AccBuiltin (ff8b582d)"))

@@ -22,7 +22,8 @@ import Binary.Neko.Instructions
 import Binary.Neko.Hashtbl as H
 
 binaryCheckInstructions = testGroup "produce/consume instruction"
-  [ checkInstruction H.empty $ AccGlobal 1
+  [ checkInstruction H.empty $ AccNull
+  , checkInstruction H.empty $ AccGlobal 1
   , checkInstruction (H.fromStringList ["someBuiltin"]) $ AccBuiltin "someBuiltin"
   , checkInstruction H.empty Push
   , checkInstruction H.empty $ Call 0
