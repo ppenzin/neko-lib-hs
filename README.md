@@ -1,5 +1,8 @@
 neko-lib
 ========
+
+[![Build Status](https://travis-ci.org/ppenzin/neko-lib-hs.svg?branch=master)](https://travis-ci.org/ppenzin/neko-lib-hs)
+
 Neko VM code generation and disassembly library for Haskell.
 
 ## Overview

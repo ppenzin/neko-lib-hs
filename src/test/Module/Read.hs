@@ -16,6 +16,7 @@ import Test.Tasty
 import Test.Tasty.SmallCheck as SC
 import Data.ByteString.Lazy as B
 import Data.Binary.Get
+import Data.Either
 
 import Binary.Neko.Module
 import Binary.Neko.Instructions
@@ -26,18 +27,15 @@ dasmTests = testGroup "Disassemble tests"
   [ SC.testProperty "Disassemble hello world" $
       (readModule hello) == Right (N {globals=[GlobalString "Hello world!\n", GlobalVar ""], fields=H.fromStringList["print"], code=[AccGlobal 0, Push, AccBuiltin "print", Call 1]})
   , SC.testProperty "Disassemble empty bytestring" $
-      (readModule $ pack []) == Left "not enough bytes"
+      isLeft(readModule $ pack []) -- particular error message is version specific
   , SC.testProperty "Invalid magic value" $
       (readModule $ pack [0x4f, 0x4b, 0x45, 0x4e, 0x02, 0x00, 0x00, 0x00]) == Left "Invalid magic value"
   , SC.testProperty "Too short to get globals" $
-      (readModule $ pack [0x4e, 0x45, 0x4b, 0x4f, 0x02, 0x00])
-                                                                  == Left "not enough bytes"
+      isLeft(readModule $ pack [0x4e, 0x45, 0x4b, 0x4f, 0x02, 0x00]) -- particular error message is version specific
   , SC.testProperty "Too short to get fields" $
-      (readModule $ pack [0x4e, 0x45, 0x4b, 0x4f, 0x02, 0x00, 0x00, 0x00,  0x01, 0x00])
-                                                                  == Left "not enough bytes"
+      isLeft(readModule $ pack [0x4e, 0x45, 0x4b, 0x4f, 0x02, 0x00, 0x00, 0x00,  0x01, 0x00]) -- particular error message is version specific
   , SC.testProperty "Too short to get code size" $
-      (readModule $ pack [0x4e, 0x45, 0x4b, 0x4f, 0x02, 0x00, 0x00, 0x00,  0x01, 0x00, 0x00, 0x00, 0x07, 0x00])
-                                                                  == Left "not enough bytes"
+      isLeft(readModule $ pack [0x4e, 0x45, 0x4b, 0x4f, 0x02, 0x00, 0x00, 0x00,  0x01, 0x00, 0x00, 0x00, 0x07, 0x00]) -- particular error message is version specific
   , SC.testProperty "Invalid number of globals" $
       (readModule $ pack [0x4e, 0x45, 0x4b, 0x4f, 0xFF, 0xFF, 0xFF, 0xFF,  0x01, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00])
                                                                   == Left "Number of globals not between 0 and 0xFFFF"

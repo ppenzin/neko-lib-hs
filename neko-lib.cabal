@@ -17,10 +17,10 @@ data-files:
 Library
   hs-source-dirs:      src/lib
   exposed-modules:     Binary.Neko.Module, Binary.Neko.Globals, Binary.Neko.Instructions, Binary.Neko.Hashtbl
-  build-depends:       base, bytestring, binary, containers, optparse-applicative, tagged
+  build-depends:       base>=4.7.0.0, bytestring, binary>=0.6.4.0, containers>=0.5.0.0, optparse-applicative, tagged
 
 Test-suite test-lib
   type:                exitcode-stdio-1.0
   hs-source-dirs:      src/test, src/lib
   main-is:             Main.hs
-  build-depends:       base, bytestring, binary, containers, optparse-applicative, tagged, process, random, directory, tasty==0.10.1.2, tasty-smallcheck==0.8.0.1, tasty-hunit==0.9.2, temporary==1.2.0.3
+  build-depends:       base>=4.7.0.0, bytestring, binary>=0.6.4.0, containers>=0.5.0.0, optparse-applicative, tagged, process, random, directory, tasty==0.10.1.2, tasty-smallcheck==0.8.0.1, tasty-hunit==0.9.2, temporary==1.2.0.3

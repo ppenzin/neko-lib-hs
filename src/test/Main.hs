@@ -10,6 +10,7 @@ Portability : cross-platform
 Entry point for the test suite
 
 -}
+{-# LANGUAGE DeriveDataTypeable #-}
 module Main where 
 
 import Test.Tasty
