@@ -24,7 +24,7 @@ Cabal that can do sandboxes:
 
 ```
 $ cabal sandbox init
-$ cabal install --only-dependencies
+$ cabal install --only-dependencies --enable-tests
 ```
 Full build cycle:
 

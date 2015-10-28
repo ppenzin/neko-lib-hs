@@ -149,7 +149,8 @@ getOp :: Word8 -- ^ Operation number
       -> Hashtbl -- ^ Some instructions require access to builtins hashtable
       -> Get Instruction -- ^ Instruction parser
 getOp opnum arg ids
-               = if (opnum == 6) then return (AccGlobal $ fromIntegral $ fromJust arg)
+               = if (opnum == 0) then return (AccNull)
+            else if (opnum == 6) then return (AccGlobal $ fromIntegral $ fromJust arg)
             else if (opnum == 11) then
                         if (member (fromJust arg) ids)
                         then return (AccBuiltin (fromJust $ H.lookup (fromJust arg) ids))
@@ -161,6 +162,7 @@ getOp opnum arg ids
 -- | Get integer opcode
 opcode :: Instruction -- ^ Instruction to process
        -> (Word8, Maybe Word32) -- ^ Opcode and additional argument
+opcode (AccNull)      = (0,  Nothing)
 opcode (AccGlobal n)  = (6,  Just $ fromIntegral n)
 opcode (AccBuiltin s) = (11, Just $ hash s)
 opcode (Push)         = (19, Nothing)
