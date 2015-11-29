@@ -20,13 +20,23 @@ import Data.Binary.Get
 import Binary.Neko.Instructions
 import Binary.Neko.Hashtbl as H
 
+-- | Test reading a single instruction (no string literals) from a byte string
+readInstr i bs = readInstrWithStrings i H.empty bs
+
+-- | Test reading a single instruction with string literal hashes
+readInstrWithStrings i hashes bs = SC.testProperty (show i) $ (readInstruction hashes bs) == ((Just i), B.empty)
+
+-- | Entry point for instruction read tests
 instrReadTests = testGroup "Instructions READ tests"
-  [ SC.testProperty "AccNull" $ (readInstruction H.empty $ pack [0x00]) == ((Just (AccNull)), B.empty)
-  , SC.testProperty "AccGlobal 0" $ (readInstruction H.empty $ pack [0x31]) == ((Just (AccGlobal 0)), B.empty)
-  , SC.testProperty "Push" $ (readInstruction H.empty $ pack [0x4c]) == (Just (Push), B.empty)
-  , SC.testProperty "AccBuiltin \"print\"" $ (readInstruction (H.fromStringList ["print"]) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xc8]) == (Just (AccBuiltin "print"), B.empty)
+  [ readInstr AccNull $ pack [0x00]
+  , readInstr AccTrue $ pack [0x04]
+  , readInstr AccFalse $ pack [0x08]
+  , readInstr AccThis $ pack [0x0C]
+  , readInstr (AccGlobal 0) $ pack [0x31]
+  , readInstr Push $ pack [0x4c]
+  , readInstrWithStrings (AccBuiltin "print") (H.fromStringList ["print"]) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xc8]
   , SC.testProperty "AccBuiltin -- wrong hash" $ (runGetOrFail (getInstruction (H.fromStringList ["print"])) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xFF]) == (Left (B.empty ,5,"Field not found for AccBuiltin (ff8b582d)"))
   , SC.testProperty "AccBuiltin -- missing field" $ (runGetOrFail (getInstruction H.empty) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xc8]) == (Left (B.empty ,5,"Field not found for AccBuiltin (c88b582d)"))
-  , SC.testProperty "Call 1" $ (readInstruction H.empty $ pack [0xad]) == (Just (Call 1), B.empty)
+  , readInstr (Call 1) $ pack [0xad]
   ]
 
