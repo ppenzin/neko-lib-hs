@@ -32,6 +32,37 @@ binaryCheckInstructions = testGroup "produce/consume instruction"
   , checkInstruction H.empty $ SetArray
   , checkInstruction H.empty Push
   , checkInstruction H.empty $ Call 0
+  , checkInstruction H.empty $ EndTrap
+  , checkInstruction H.empty $ Bool
+  , checkInstruction H.empty $ IsNull
+  , checkInstruction H.empty $ IsNotNull
+  , checkInstruction H.empty $ Add
+  , checkInstruction H.empty $ Sub
+  , checkInstruction H.empty $ Mult
+  , checkInstruction H.empty $ Div
+  , checkInstruction H.empty $ Mod
+  , checkInstruction H.empty $ Shl
+  , checkInstruction H.empty $ Shr
+  , checkInstruction H.empty $ UShr
+  , checkInstruction H.empty $ Or
+  , checkInstruction H.empty $ And
+  , checkInstruction H.empty $ Xor
+  , checkInstruction H.empty $ Eq
+  , checkInstruction H.empty $ Neq
+  , checkInstruction H.empty $ Gt
+  , checkInstruction H.empty $ Gte
+  , checkInstruction H.empty $ Lt
+  , checkInstruction H.empty $ Lte
+  , checkInstruction H.empty $ Not
+  , checkInstruction H.empty $ TypeOf
+  , checkInstruction H.empty $ Compare
+  , checkInstruction H.empty $ Hash
+  , checkInstruction H.empty $ New
+  , checkInstruction H.empty $ AccStack0
+  , checkInstruction H.empty $ AccStack1
+  , checkInstruction H.empty $ AccIndex0
+  , checkInstruction H.empty $ AccIndex1
+  , checkInstruction H.empty $ PhysCompare
   ]
 
 -- | Assemble and dissassemble an instruction
