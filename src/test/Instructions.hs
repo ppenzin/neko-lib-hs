@@ -26,8 +26,10 @@ binaryCheckInstructions = testGroup "produce/consume instruction"
   , checkInstruction H.empty $ AccTrue
   , checkInstruction H.empty $ AccFalse
   , checkInstruction H.empty $ AccThis
+  , checkInstruction H.empty $ AccArray
   , checkInstruction H.empty $ AccGlobal 1
   , checkInstruction (H.fromStringList ["someBuiltin"]) $ AccBuiltin "someBuiltin"
+  , checkInstruction H.empty $ SetArray
   , checkInstruction H.empty Push
   , checkInstruction H.empty $ Call 0
   ]

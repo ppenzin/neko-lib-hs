@@ -32,7 +32,9 @@ instrReadTests = testGroup "Instructions READ tests"
   , readInstr AccTrue $ pack [0x04]
   , readInstr AccFalse $ pack [0x08]
   , readInstr AccThis $ pack [0x0C]
+  , readInstr AccArray $ pack [0x24]
   , readInstr (AccGlobal 0) $ pack [0x31]
+  , readInstr SetArray $ pack [0x40]
   , readInstr Push $ pack [0x4c]
   , readInstrWithStrings (AccBuiltin "print") (H.fromStringList ["print"]) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xc8]
   , SC.testProperty "AccBuiltin -- wrong hash" $ (runGetOrFail (getInstruction (H.fromStringList ["print"])) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xFF]) == (Left (B.empty ,5,"Field not found for AccBuiltin (ff8b582d)"))
