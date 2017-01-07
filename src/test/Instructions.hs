@@ -30,7 +30,10 @@ binaryCheckInstructions = testGroup "produce/consume instruction"
   , checkInstruction H.empty $ AccInt 1000
   , checkInstruction H.empty $ AccStack 3
   , checkInstruction H.empty $ AccGlobal 1
+  , checkInstruction H.empty $ AccEnv 4
+  , checkInstruction (H.fromStringList ["someField"]) $ AccField "someField"
   , checkInstruction H.empty $ AccArray
+  , checkInstruction H.empty $ AccIndex 5
   , checkInstruction (H.fromStringList ["someBuiltin"]) $ AccBuiltin "someBuiltin"
   , checkInstruction H.empty $ SetArray
   , checkInstruction H.empty Push

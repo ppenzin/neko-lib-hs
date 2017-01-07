@@ -159,7 +159,13 @@ getOp opnum arg ids
             else if (opnum == 4) then return (AccInt $ fromIntegral $ fromJust arg)
             else if (opnum == 5) then return (AccStack $ (fromIntegral $ fromJust arg) + 2)
             else if (opnum == 6) then return (AccGlobal $ fromIntegral $ fromJust arg)
+            else if (opnum == 7) then return (AccEnv $ fromIntegral $ fromJust arg)
+            else if (opnum == 8) then
+                        if (member (fromJust arg) ids)
+                        then return (AccField (fromJust $ H.lookup (fromJust arg) ids))
+                        else fail ("Field not found for AccField (" ++ (showHex (fromJust arg) "") ++ ")")
             else if (opnum == 9) then return (AccArray)
+            else if (opnum == 10) then return (AccIndex $ (fromIntegral $ fromJust arg) + 2)
             else if (opnum == 11) then
                         if (member (fromJust arg) ids)
                         then return (AccBuiltin (fromJust $ H.lookup (fromJust arg) ids))
@@ -208,9 +214,12 @@ opcode (AccTrue)      = (1,  Nothing)
 opcode (AccFalse)     = (2,  Nothing)
 opcode (AccThis)      = (3,  Nothing)
 opcode (AccInt n)     = (4,  Just $ fromIntegral n)
-opcode (AccStack n)   = (5,  Just $ (fromIntegral n) - 2) -- TODO Do we need to check for n>=2 ?
+opcode (AccStack n)   = (5,  Just $ (fromIntegral n) - 2) -- TODO Do we need to check for n<2 ?
 opcode (AccGlobal n)  = (6,  Just $ fromIntegral n)
+opcode (AccEnv n)     = (7,  Just $ fromIntegral n)
+opcode (AccField s)   = (8,  Just $ hash s)
 opcode (AccArray)     = (9,  Nothing)
+opcode (AccIndex n)   = (10, Just $ (fromIntegral n) - 2) -- TODO Do we need to check for n<2 ?
 opcode (AccBuiltin s) = (11, Just $ hash s)
 opcode (SetArray)     = (16, Nothing)
 opcode (Push)         = (19, Nothing)

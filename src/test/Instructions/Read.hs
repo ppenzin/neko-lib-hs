@@ -36,7 +36,12 @@ instrReadTests = testGroup "Instructions READ tests"
   , readInstr (AccInt 0x100) $ pack [0x13, 0x00, 0x01, 0x00, 0x00]
   , readInstr (AccStack 3) $ pack [0x2d]
   , readInstr (AccGlobal 0) $ pack [0x31]
+  , readInstr (AccEnv 1) $ pack [0x3d]
+  , readInstrWithStrings (AccField "print") (H.fromStringList ["print"]) $ pack [0x23, 0x2d, 0x58, 0x8b, 0xc8]
+  , SC.testProperty "AccField -- wrong hash" $ (runGetOrFail (getInstruction (H.fromStringList ["print"])) $ pack [0x23, 0x2d, 0x58, 0x8b, 0xFF]) == (Left (B.empty ,5,"Field not found for AccField (ff8b582d)"))
+  , SC.testProperty "AccField -- missing field" $ (runGetOrFail (getInstruction H.empty) $ pack [0x23, 0x2d, 0x58, 0x8b, 0xc8]) == (Left (B.empty ,5,"Field not found for AccField (c88b582d)"))
   , readInstr AccArray $ pack [0x24]
+  , readInstr (AccIndex 3) $ pack [0x55]
   , readInstr SetArray $ pack [0x40]
   , readInstr Push $ pack [0x4c]
   , readInstrWithStrings (AccBuiltin "print") (H.fromStringList ["print"]) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xc8]
