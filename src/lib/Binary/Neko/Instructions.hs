@@ -99,6 +99,7 @@ data Instruction =
       deriving (Show, Eq)
 
 -- | Read instructions
+-- Consume bytestring, produce instructions and status message
 readInstructions :: Word32 -- ^ code size
                  -> Hashtbl -- ^ context (names of fields)
                  -> ByteString -- ^ bytes to read from
@@ -118,6 +119,8 @@ readInstruction ids bs = if (isRight res) then (Just (i), rest) else (Nothing, r
           Left (rest', _, _) = res
 
 -- | Grab instructions from a bytestring
+-- Decode bytestring, consuming one byte per instruction with no paramenters
+-- and two for instructions with parameters
 getInstructions :: Word32 -- ^ code size - number of instructions+arguments left to parse
                 -> Hashtbl -- ^ Builtins hashtable to provide context
                 -> Get [Instruction] -- ^ decoder
@@ -153,6 +156,8 @@ getOp opnum arg ids
             else if (opnum == 1) then return (AccTrue)
             else if (opnum == 2) then return (AccFalse)
             else if (opnum == 3) then return (AccThis)
+            else if (opnum == 4) then return (AccInt $ fromIntegral $ fromJust arg)
+            else if (opnum == 5) then return (AccStack $ (fromIntegral $ fromJust arg) + 2)
             else if (opnum == 6) then return (AccGlobal $ fromIntegral $ fromJust arg)
             else if (opnum == 9) then return (AccArray)
             else if (opnum == 11) then
@@ -202,6 +207,8 @@ opcode (AccNull)      = (0,  Nothing)
 opcode (AccTrue)      = (1,  Nothing)
 opcode (AccFalse)     = (2,  Nothing)
 opcode (AccThis)      = (3,  Nothing)
+opcode (AccInt n)     = (4,  Just $ fromIntegral n)
+opcode (AccStack n)   = (5,  Just $ (fromIntegral n) - 2) -- TODO Do we need to check for n>=2 ?
 opcode (AccGlobal n)  = (6,  Just $ fromIntegral n)
 opcode (AccArray)     = (9,  Nothing)
 opcode (AccBuiltin s) = (11, Just $ hash s)
