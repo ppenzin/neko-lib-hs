@@ -47,6 +47,15 @@ instrReadTests = testGroup "Instructions READ tests"
   , readInstrWithStrings (AccBuiltin "print") (H.fromStringList ["print"]) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xc8]
   , SC.testProperty "AccBuiltin -- wrong hash" $ (runGetOrFail (getInstruction (H.fromStringList ["print"])) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xFF]) == (Left (B.empty ,5,"Field not found for AccBuiltin (ff8b582d)"))
   , SC.testProperty "AccBuiltin -- missing field" $ (runGetOrFail (getInstruction H.empty) $ pack [0x2f, 0x2d, 0x58, 0x8b, 0xc8]) == (Left (B.empty ,5,"Field not found for AccBuiltin (c88b582d)"))
+  , readInstr (SetStack 3) $ pack [0x32, 0x03]
+  , readInstr (SetGlobal 0) $ pack [0x69]
+  , readInstr (SetEnv 1) $ pack [0x75]
+  , readInstrWithStrings (SetField "print") (H.fromStringList ["print"]) $ pack [0x3f, 0x2d, 0x58, 0x8b, 0xc8]
+  , SC.testProperty "SetField -- wrong hash" $ (runGetOrFail (getInstruction (H.fromStringList ["print"])) $ pack [0x3f, 0x2d, 0x58, 0x8b, 0xFF]) == (Left (B.empty ,5,"Field not found for SetField (ff8b582d)"))
+  , SC.testProperty "SetField -- missing field" $ (runGetOrFail (getInstruction H.empty) $ pack [0x3f, 0x2d, 0x58, 0x8b, 0xc8]) == (Left (B.empty ,5,"Field not found for SetField (c88b582d)"))
+  , readInstr (SetIndex 3) $ pack [0x46, 0x03]
+  , readInstr (SetThis) $ pack [0x48]
+  , readInstr (Pop 1) $ pack [0xa5]
   , readInstr (Call 1) $ pack [0xad]
   , readInstr EndTrap $ pack [0x6c]
   , readInstr Bool $ pack [0x7c]
