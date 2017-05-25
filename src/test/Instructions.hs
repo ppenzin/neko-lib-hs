@@ -45,6 +45,11 @@ binaryCheckInstructions = testGroup "produce/consume instruction"
   , checkInstruction H.empty $ Push
   , checkInstruction H.empty $ Pop 10
   , checkInstruction H.empty $ Call 0
+  , checkInstruction H.empty $ ObjCall 5
+  , checkInstruction H.empty $ Jump (-3)
+  , checkInstruction H.empty $ JumpIf 15
+  , checkInstruction H.empty $ JumpIfNot (-6)
+  , checkInstruction H.empty $ Trap 30
   , checkInstruction H.empty $ EndTrap
   , checkInstruction H.empty $ Bool
   , checkInstruction H.empty $ IsNull

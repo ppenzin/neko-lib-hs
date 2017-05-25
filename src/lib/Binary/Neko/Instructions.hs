@@ -143,12 +143,12 @@ getInstruction ids
                              getWord8 >>= \w -> if (b == 2) then (getOp (fromIntegral w) Nothing ids)
                                                 else (getOp (b `shiftR` 2) (Just (fromIntegral w)) ids)
                     else if (code == 3) then
-                             getWord32le >>= \i -> getOp (b `shiftR` 2) (Just i) ids
+                             getInt32le >>= \i -> getOp (b `shiftR` 2) (Just i) ids
                     else fail "getInstruction: unrecognized opcode group"
 
 -- | Second level of instruction read logic
 getOp :: Word8 -- ^ Operation number
-      -> Maybe Word32 -- ^ Additional argument
+      -> Maybe Int32 -- ^ Additional argument
       -> Hashtbl -- ^ Some instructions require access to builtins hashtable
       -> Get Instruction -- ^ Instruction parser
 getOp opnum arg ids
@@ -161,28 +161,33 @@ getOp opnum arg ids
             else if (opnum == 6) then return (AccGlobal $ fromIntegral $ fromJust arg)
             else if (opnum == 7) then return (AccEnv $ fromIntegral $ fromJust arg)
             else if (opnum == 8) then
-                        if (member (fromJust arg) ids)
-                        then return (AccField (fromJust $ H.lookup (fromJust arg) ids))
-                        else fail ("Field not found for AccField (" ++ (showHex (fromJust arg) "") ++ ")")
+                        if (member (fromIntegral $ fromJust arg) ids)
+                        then return (AccField (fromJust $ H.lookup (fromIntegral $ fromJust arg) ids))
+                        else fail ("Field not found for AccField (" ++ (showHex (fromIntegral $ fromJust arg :: Word32) "") ++ ")")
             else if (opnum == 9) then return (AccArray)
             else if (opnum == 10) then return (AccIndex $ (fromIntegral $ fromJust arg) + 2)
             else if (opnum == 11) then
-                        if (member (fromJust arg) ids)
-                        then return (AccBuiltin (fromJust $ H.lookup (fromJust arg) ids))
-                        else fail ("Field not found for AccBuiltin (" ++ (showHex (fromJust arg) "") ++ ")")
+                        if (member (fromIntegral $ fromJust arg) ids)
+                        then return (AccBuiltin (fromJust $ H.lookup (fromIntegral $ fromJust arg) ids))
+                        else fail ("Field not found for AccBuiltin (" ++ (showHex (fromIntegral $ fromJust arg :: Word32) "") ++ ")")
             else if (opnum == 12) then return (SetStack $ fromIntegral $ fromJust arg)
             else if (opnum == 13) then return (SetGlobal $ fromIntegral $ fromJust arg)
             else if (opnum == 14) then return (SetEnv $ fromIntegral $ fromJust arg)
             else if (opnum == 15) then
-                        if (member (fromJust arg) ids)
-                        then return (SetField (fromJust $ H.lookup (fromJust arg) ids))
-                        else fail ("Field not found for SetField (" ++ (showHex (fromJust arg) "") ++ ")")
+                        if (member (fromIntegral $ fromJust arg) ids)
+                        then return (SetField (fromJust $ H.lookup (fromIntegral $ fromJust arg) ids))
+                        else fail ("Field not found for SetField (" ++ (showHex (fromIntegral $ fromJust arg :: Word32) "") ++ ")")
             else if (opnum == 16) then return (SetArray)
             else if (opnum == 17) then return (SetIndex $ fromIntegral $ fromJust arg)
             else if (opnum == 18) then return (SetThis)
             else if (opnum == 19) then return (Push)
             else if (opnum == 20) then return (Pop $ fromIntegral $ fromJust arg)
             else if (opnum == 21) then return (Call $ fromIntegral $ fromJust arg)
+            else if (opnum == 22) then return (ObjCall $ fromIntegral $ fromJust arg)
+            else if (opnum == 23) then return (Jump $ fromIntegral $ fromJust arg)
+            else if (opnum == 24) then return (JumpIf $ fromIntegral $ fromJust arg)
+            else if (opnum == 25) then return (JumpIfNot $ fromIntegral $ fromJust arg)
+            else if (opnum == 26) then return (Trap $ fromIntegral $ fromJust arg)
             else if (opnum == 27) then return (EndTrap)
             else if (opnum == 31) then return (Bool)
             else if (opnum == 32) then return (IsNull)
@@ -241,6 +246,11 @@ opcode (SetThis)      = (18, Nothing)
 opcode (Push)         = (19, Nothing)
 opcode (Pop n)        = (20, Just $ fromIntegral n)
 opcode (Call n)       = (21, Just $ fromIntegral n)
+opcode (ObjCall n)    = (22, Just $ fromIntegral n)
+opcode (Jump n)       = (23, Just $ fromIntegral n)
+opcode (JumpIf n)     = (24, Just $ fromIntegral n)
+opcode (JumpIfNot n)  = (25, Just $ fromIntegral n)
+opcode (Trap n)       = (26, Just $ fromIntegral n)
 opcode (EndTrap)      = (27, Nothing)
 opcode (Bool)         = (31, Nothing)
 opcode (IsNull)       = (32, Nothing)
