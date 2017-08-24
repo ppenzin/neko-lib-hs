@@ -51,6 +51,9 @@ binaryCheckInstructions = testGroup "produce/consume instruction"
   , checkInstruction H.empty $ JumpIfNot (-6)
   , checkInstruction H.empty $ Trap 30
   , checkInstruction H.empty $ EndTrap
+  , checkInstruction H.empty $ (Ret 10)
+  , checkInstruction H.empty $ (MakeEnv 1)
+  , checkInstruction H.empty $ (MakeArray 1)
   , checkInstruction H.empty $ Bool
   , checkInstruction H.empty $ IsNull
   , checkInstruction H.empty $ IsNotNull
@@ -76,11 +79,15 @@ binaryCheckInstructions = testGroup "produce/consume instruction"
   , checkInstruction H.empty $ Compare
   , checkInstruction H.empty $ Hash
   , checkInstruction H.empty $ New
+  , checkInstruction H.empty $ JumpTable 0
+  , checkInstruction H.empty $ Apply 6
   , checkInstruction H.empty $ AccStack0
   , checkInstruction H.empty $ AccStack1
   , checkInstruction H.empty $ AccIndex0
   , checkInstruction H.empty $ AccIndex1
   , checkInstruction H.empty $ PhysCompare
+  , checkInstruction H.empty $ TailCall (4,20)
+  , checkInstruction H.empty $ Loop
   ]
 
 -- | Assemble and dissassemble an instruction

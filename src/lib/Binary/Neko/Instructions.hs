@@ -144,7 +144,7 @@ getInstruction ids
                                                 else (getOp (b `shiftR` 2) (Just (fromIntegral w)) ids)
                     else if (code == 3) then
                              getInt32le >>= \i -> getOp (b `shiftR` 2) (Just i) ids
-                    else fail "getInstruction: unrecognized opcode group"
+                    else fail "Get instruction: unrecognized opcode group"
 
 -- | Second level of instruction read logic
 getOp :: Word8 -- ^ Operation number
@@ -189,6 +189,9 @@ getOp opnum arg ids
             else if (opnum == 25) then return (JumpIfNot $ fromIntegral $ fromJust arg)
             else if (opnum == 26) then return (Trap $ fromIntegral $ fromJust arg)
             else if (opnum == 27) then return (EndTrap)
+            else if (opnum == 28) then return (Ret $ fromIntegral $ fromJust arg)
+            else if (opnum == 29) then return (MakeEnv $ fromIntegral $ fromJust arg)
+            else if (opnum == 30) then return (MakeArray $ fromIntegral $ fromJust arg)
             else if (opnum == 31) then return (Bool)
             else if (opnum == 32) then return (IsNull)
             else if (opnum == 33) then return (IsNotNull)
@@ -214,12 +217,16 @@ getOp opnum arg ids
             else if (opnum == 53) then return (Compare)
             else if (opnum == 54) then return (Hash)
             else if (opnum == 55) then return (New)
+            else if (opnum == 56) then return (JumpTable $ fromIntegral $ fromJust arg)
+            else if (opnum == 57) then return (Apply $ fromIntegral $ fromJust arg)
             else if (opnum == 58) then return (AccStack0)
             else if (opnum == 59) then return (AccStack1)
             else if (opnum == 60) then return (AccIndex0)
             else if (opnum == 61) then return (AccIndex1)
             else if (opnum == 62) then return (PhysCompare)
-            else fail "getInstruction: unrecognized opcode"
+            else if (opnum == 63) then return (TailCall ((fromIntegral $ fromJust arg) .&. 7, (fromIntegral $ fromJust arg) `shiftR` 3))
+            else if (opnum == 64) then return (Loop)
+            else fail "Get instruction: unrecognized opcode"
 
 -- | Get integer opcode
 opcode :: Instruction -- ^ Instruction to process
@@ -252,6 +259,9 @@ opcode (JumpIf n)     = (24, Just $ fromIntegral n)
 opcode (JumpIfNot n)  = (25, Just $ fromIntegral n)
 opcode (Trap n)       = (26, Just $ fromIntegral n)
 opcode (EndTrap)      = (27, Nothing)
+opcode (Ret n)        = (28, Just $ fromIntegral n)
+opcode (MakeEnv n)    = (29, Just $ fromIntegral n)
+opcode (MakeArray n)  = (30, Just $ fromIntegral n)
 opcode (Bool)         = (31, Nothing)
 opcode (IsNull)       = (32, Nothing)
 opcode (IsNotNull)    = (33, Nothing)
@@ -277,12 +287,15 @@ opcode (TypeOf)       = (52, Nothing)
 opcode (Compare)      = (53, Nothing)
 opcode (Hash)         = (54, Nothing)
 opcode (New)          = (55, Nothing)
+opcode (JumpTable n)  = (56, Just $ fromIntegral n)
+opcode (Apply n)      = (57, Just $ fromIntegral n)
 opcode (AccStack0)    = (58, Nothing)
 opcode (AccStack1)    = (59, Nothing)
 opcode (AccIndex0)    = (60, Nothing)
 opcode (AccIndex1)    = (61, Nothing)
 opcode (PhysCompare)  = (62, Nothing)
-opcode x              = error ("TODO implement " ++ (show x))
+opcode (TailCall(a,s))= (63, Just $ (fromIntegral a) .|. ((fromIntegral s) `shiftL` 3))
+opcode (Loop)         = (0, Just 64)
 
 -- | Write instruction out using Put monad
 putInstruction :: Instruction -> Put
