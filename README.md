@@ -7,8 +7,8 @@ Neko VM code generation and disassembly library for Haskell.
 
 ## Overview
 
-[Neko VM](nekovm.org) is a minimalistic general-purpose virtual machine. This
-library attempts to produce and disassemble Neko code from pure Haskell.
+[Neko VM](http://nekovm.org) is a minimalistic general-purpose virtual machine.
+This library attempts to produce and disassemble Neko code from pure Haskell.
 
 ## Prerequisites
 
